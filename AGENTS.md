@@ -24,6 +24,8 @@ Use a United States setting for fictional business examples, UI copy, Agent cont
 
 ## Repository language
 
+Maintain `README.md` in English, `README.zh-CN.md` in Simplified Chinese, and `README.ja.md` in Japanese. These localized README files are an explicit exception to the English-only rule below. Keep all three READMEs aligned on features, setup, deployment, FAQ and limitations, with reciprocal language links. Documentation language does not change the application or Agent language.
+
 Use English for documentation, code comments and interface labels. Mandarin lesson text, coaching examples and transcript content are an intentional exception: Chinese characters, tone-marked pinyin and English meanings are required for this educational scenario.
 
 ## Start here

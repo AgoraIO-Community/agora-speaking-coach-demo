@@ -1,6 +1,6 @@
-# Agora Mandarin Speaking Coach Demo
+# Agora Speaking Coach Demo
 
-A Mandarin speaking coach demo built with Agora and Next.js. Practice short Chinese conversations with English guidance, written pinyin, and vocabulary or grammar feedback based on recognized text.
+A voice AI speaking coach demo built with Agora and Next.js. This example focuses on Mandarin: practice short Chinese conversations with English guidance, written pinyin, and vocabulary or grammar feedback based on recognized text.
 
 **[Explore more voice AI demos on Agora Recipes →](https://recipes.agora.io/)**
 

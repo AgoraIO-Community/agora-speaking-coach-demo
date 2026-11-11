@@ -2,7 +2,7 @@ import type { ScenarioPresentation } from '@/types/presentation';
 export type { ScenarioPresentation } from '@/types/presentation';
 export const presentation: ScenarioPresentation = {
   id: '06-speaking-coach',
-  name: 'Mandarin Speaking Coach',
+  name: 'Speaking Coach',
   purpose: "Mandarin practice with English guidance",
   summary: 'Practice short Chinese phrases with English guidance throughout. Choose more Mandarin immersion only when you want it.',
   featuresHeading: 'Practice with your coach',
@@ -29,12 +29,12 @@ export const presentation: ScenarioPresentation = {
     { id: 'needs-work', label: 'I need more help' },
   ],
   developer: {
-    sourceUrl: "https://github.com/AgoraIO-Community/agora-mandarin-speaking-coach-demo",
+    sourceUrl: "https://github.com/AgoraIO-Community/agora-speaking-coach-demo",
     runCommand:
       'pnpm install --frozen-lockfile\n# Copy env.local.example to .env.local if it does not exist.\n# Fill the two Agora project credentials.\npnpm run doctor\npnpm run dev',
     skillsCommand: 'npx skills add github:AgoraIO/skills',
     assistantPrompt:
-      'Use Agora Skills to adapt this local Mandarin Speaking Coach checkout. Read README.md, RECIPE.md and AGENTS.md first. Preserve RTC/RTM ownership and bilingual recognition. Customize lib/lessons.ts and lib/agent-config.ts for Mandarin learners. Keep transcript feedback separate from acoustic pronunciation assessment.',
+      'Use Agora Skills to adapt this local Speaking Coach checkout. Read README.md, RECIPE.md and AGENTS.md first. Preserve RTC/RTM ownership and bilingual recognition. Customize lib/lessons.ts and lib/agent-config.ts for Mandarin learners. Keep transcript feedback separate from acoustic pronunciation assessment.',
     docsUrl: 'https://docs.agora.io/en/ai/build/build-server-client',
     sdkUrl: 'https://www.npmjs.com/package/agora-agents',
     consoleUrl: 'https://console.agora.io/',

@@ -7,7 +7,7 @@ const read = (file) => fs.readFileSync(path.join(root, file), 'utf8');
 const pkg = JSON.parse(read('package.json'));
 assert.ok(!fs.existsSync(path.join(root, 'docs', 'scenario')), 'Keep scenario guidance in root documents and internal acceptance material outside the repository.');
 const id = pkg.name;
-assert.equal(id, 'agora-mandarin-speaking-coach-demo', 'Preserve the standalone scenario identity.');
+assert.equal(id, 'agora-speaking-coach-demo', 'Preserve the standalone scenario identity.');
 assert.ok(!fs.existsSync(path.join(root, 'scenarios')), 'Use the standalone Quickstart layout, not a root scenario registry.');
 const required = [
   'lib/agent-config.ts', 'lib/agent-tools.ts', 'lib/presentation.ts',

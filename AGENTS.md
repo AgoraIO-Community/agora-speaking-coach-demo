@@ -4,7 +4,7 @@
 
 This first version is conversation-only. No business data lookup, external tools, database, record writes, saved results, or cross-session business history are available. Keep details in the current conversation. Do not claim a real registration, reminder, survey submission, callback, payment or saved result. Do not request secrets or unnecessary personal identifiers.
 
-This guide is for coding agents making changes in `agora-mandarin-speaking-coach-demo`.
+This guide is for coding agents making changes in `agora-speaking-coach-demo`.
 
 ## Shared scenario UI requirements
 

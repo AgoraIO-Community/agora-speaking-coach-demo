@@ -1,5 +1,5 @@
 {
-  "name": "agora-mandarin-speaking-coach-demo",
+  "name": "agora-speaking-coach-demo",
   "version": "0.1.0",
   "description": "Mandarin practice for English-speaking learners with lessons and conversational feedback",
   "private": true,
@@ -61,10 +61,10 @@
   "packageManager": "pnpm@9.15.9",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/AgoraIO-Community/agora-mandarin-speaking-coach-demo.git"
+    "url": "git+https://github.com/AgoraIO-Community/agora-speaking-coach-demo.git"
   },
-  "homepage": "https://github.com/AgoraIO-Community/agora-mandarin-speaking-coach-demo#readme",
+  "homepage": "https://github.com/AgoraIO-Community/agora-speaking-coach-demo#readme",
   "bugs": {
-    "url": "https://github.com/AgoraIO-Community/agora-mandarin-speaking-coach-demo/issues"
+    "url": "https://github.com/AgoraIO-Community/agora-speaking-coach-demo/issues"
   }
 }

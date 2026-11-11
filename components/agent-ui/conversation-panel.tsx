@@ -64,7 +64,7 @@ function TranscriptScrollRestoration({
 
 export function ConversationPanel({
   id,
-  name = 'Mandarin Speaking Coach',
+  name = 'Speaking Coach',
   messages,
   pending,
   voiceState = 'ready',

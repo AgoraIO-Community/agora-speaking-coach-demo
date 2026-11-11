@@ -188,7 +188,7 @@ export default function LandingPage() {
         ],
       }));
       setError(
-        'Could not connect to the Mandarin Speaking Coach. Please try again.',
+        'Could not connect to the Speaking Coach. Please try again.',
       );
       console.error('Error starting conversation:', err);
     } finally {
@@ -367,7 +367,7 @@ export default function LandingPage() {
                       {agentJoinError && (
                         <Alert variant="destructive">
                           <AlertDescription>
-                            Could not connect to the Mandarin Speaking Coach. End
+                            Could not connect to the Speaking Coach. End
                             this session and try again.
                           </AlertDescription>
                         </Alert>

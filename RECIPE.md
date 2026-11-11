@@ -1,4 +1,4 @@
-# Agora Mandarin Speaking Coach Demo
+# Agora Speaking Coach Demo
 
 ## 1. Overview
 

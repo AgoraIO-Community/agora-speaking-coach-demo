@@ -43,7 +43,7 @@ Use Node.js 24 from .nvmrc and pnpm 9.15.9. Install with pnpm install --frozen-l
 - Keep startup independent of business state. No business tools, saved results or persistent customer/learner history are available. Business API routes are not provided.
 - NEXT_PUBLIC_AGORA_APP_ID is public and required at build/runtime. Keep NEXT_AGORA_APP_CERTIFICATE and optional vendor keys server-only. Never log, commit or screenshot credentials.
 - Sample token/start/stop endpoints are not production login or abuse controls. Provider retention is external to this source. Keep missing measurements unknown and Inspector outcomes manual.
-- Keep Inspector, Build, adopted UIkit source, source/font licenses and Docker support.
+- Keep Inspector, Build, adopted UIkit source, source licenses and Docker support.
 
 ## Mandarin coaching contract
 
@@ -103,3 +103,7 @@ Keep FAQ in the upper-right header beside Inspector and Build. `components/Scena
 Practice short Mandarin phrases with English instructions, explanations and feedback throughout; Mandarin immersion requires an explicit request. This first version is conversation-only. No business data lookup, external tools, database, record writes, saved results, or cross-session business history are available. Keep details in the current conversation. Do not claim a real registration, reminder, survey submission, callback, payment or saved result. Do not request secrets or unnecessary personal identifiers.
 
 See [current capabilities](README.md#what-you-can-do), the [conversation contract](ARCHITECTURE.md#conversation-behavior) and [verification guidance](AGENTS.md#verification-and-maintenance). Tools remain disabled, and no persistent business operations are provided.
+
+## Typography
+
+Use the installed Helvetica Neue/sans-serif fallback and keep the shared font tokens consistent with global/form-control styles. Do not bundle or download font assets. Preserve UI source attribution and other third-party notices. Check desktop/mobile rendering after typography changes.

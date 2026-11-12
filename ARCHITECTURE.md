@@ -117,3 +117,13 @@ These sources support the configured intent, not a successful live Agora call.
 Canonical checks exercise the installed SDK's serialized configuration. They do not test project entitlements, managed-service rollout, English pronunciation by this Mandarin voice, code-switching quality, acoustic correctness or actual speech delivery. Check all of those in a real bilingual call before release. No live provider keys or sibling credentials were copied.
 
 The coach uses shorter phrases and repetition when asked to slow down. There is no dynamic TTS speed control. Written pinyin belongs to preview cards, and the prompt instructs the coach not to speak romanization.
+
+## Token lifetime compatibility
+
+Browser RTC/RTM tokens and server-side Agent/REST tokens use the shared ten-minute `TOKEN_LIFETIME_SECONDS` duration. Token builders take durations, not Unix expiry timestamps. Keep the App Certificate and ConvoAI-capable REST tokens on the server.
+
+The Agent start/stop routes explicitly mint tokens with `ConvoAITokenBuilder.buildToken` and pass the supported SDK `authToken` / session `token` options. This avoids the `agora-agents` 2.14.0 / `agora-token` 2.0.7 positional-argument mismatch: the SDK helper otherwise treats publisher role `1` as a one-second token lifetime. Do not patch installed dependencies or add blanket overrides. `verify:api` exercises the real SDK serialization with intercepted network transport, decodes and verifies actual signed tokens, and checks a 600-second lifetime for browser, REST start, Agent RTC/RTM and REST stop tokens. Revisit the explicit-token compatibility path only after an upstream SDK correction passes this regression and live acceptance.
+
+## Lint dependency security compatibility
+
+The registry audit reports GHSA-g3hv-75wg-m249 in minimatch 10.2.6, including the latest typescript-estree 8.72.2 dependency range. A parent-scoped pnpm override selects minimatch 11.0.1 only for `@typescript-eslint/typescript-estree>minimatch`; it does not replace unrelated consumers. Node.js 24 satisfies its runtime requirement, and the caller uses the retained CommonJS `minimatch` function with `dot: true`. Recheck and remove this compatibility override when the upstream dependency range includes a patched version. Run the complete verification suite and an official-registry audit after lockfile updates.

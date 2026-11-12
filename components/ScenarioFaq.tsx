@@ -10,6 +10,10 @@ import {
 
 const questions = [
   {
+    question: 'How long does a session last?',
+    answer: 'Each session ends automatically after 10 minutes; choose Start again to continue.',
+  },
+  {
     "question": "How do I start a conversation?",
     "answer": "Choose Practice Mandarin and allow microphone access when your browser asks. Speak in Mandarin or ask for English guidance. You can mute the microphone or end the conversation with the voice controls."
   },

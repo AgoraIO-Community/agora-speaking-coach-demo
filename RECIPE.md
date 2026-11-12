@@ -43,6 +43,8 @@ The coach asks for level and goal, uses bundled examples and asks one question a
 
 Deepgram Nova-3 multilingual recognition is configured for Mandarin/English switching; MiniMax uses a Mandarin voice. A 1,200 ms pause accommodates learner hesitation. See [speech provider references and limits](ARCHITECTURE.md#speech-provider-references). Pinyin is a written reading aid, not spoken output. No acoustic tone or pronunciation evaluation is performed.
 
+Each session ends automatically after 10 minutes; choose Start again to continue.
+
 ## 7. Customize for Your Business
 
 Adapt `lib/lessons.ts` for approved Mandarin teaching material and `lib/agent-config.ts` for the flow. Keep interface copy English while preserving Chinese educational examples. Change models in `lib/runtime-profile.ts` and validate a real bilingual call after provider changes.

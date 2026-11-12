@@ -6,6 +6,8 @@
 
 Agora と Next.js で構築した音声 AI スピーキングコーチのデモです。この例では中国語（普通話）を扱い、英語の説明、表記されたピンイン、認識テキストに基づく語彙や文法のフィードバックで短い会話を練習します。
 
+**[デモを試す →](https://agora-speaking-coach-demo.vercel.app)**
+
 **[Agora Recipes で音声 AI デモをもっと探す →](https://recipes.agora.io/)**
 
 [![Agora](https://img.shields.io/badge/Voice_AI-Agora-099DFD)](https://www.agora.io/en/products/conversational-ai-engine/)
@@ -79,6 +81,8 @@ pnpm run dev
 ```
 
 [http://localhost:3000](http://localhost:3000) を開き、**Practice Mandarin** を選んでマイクの使用を許可します。必要に応じて要約を依頼し、終了ボタン（**End conversation**）で通話を終えます。
+
+各セッションは10分後に自動終了します。続けるには Start again を選択してください。
 
 <a id="deployment"></a>
 

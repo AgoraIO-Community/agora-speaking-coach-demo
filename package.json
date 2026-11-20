@@ -1,6 +1,6 @@
 {
   "name": "agora-speaking-coach-demo",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Mandarin practice for English-speaking learners with lessons and conversational feedback",
   "private": true,
   "engines": {

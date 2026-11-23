@@ -5,6 +5,5 @@ export const RUNTIME_PROFILE = {
   synthesis: {
     provider: 'MiniMax',
     model: 'speech_2_6_turbo',
-    voice: 'Chinese (Mandarin)_Warm_Bestie',
   },
 } as const;

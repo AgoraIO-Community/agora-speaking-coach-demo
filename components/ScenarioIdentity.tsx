@@ -4,14 +4,17 @@ import Image from 'next/image';
 import { useEffect, useRef } from 'react';
 import { Button } from './ui/button';
 import { DialogTrigger } from './ui/dialog';
+import type { PracticeLanguage } from '@/lib/lessons';
 import { LessonGuide } from './LessonPreview';
 import type { ScenarioPresentation } from '@/lib/presentation';
 
 export function ScenarioIdentity({
   scenario,
+  language,
   onInspect,
 }: {
   scenario: ScenarioPresentation;
+  language: PracticeLanguage;
   onInspect: () => void;
 }) {
   const headerRef = useRef<HTMLElement>(null);
@@ -69,7 +72,7 @@ export function ScenarioIdentity({
             <span className="demo-tool-label">FAQ</span>
           </Button>
         </DialogTrigger>
-        <LessonGuide />
+        <LessonGuide language={language} />
         <Button
           variant="ghost"
           size="sm"

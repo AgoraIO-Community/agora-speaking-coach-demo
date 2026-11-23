@@ -35,8 +35,48 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  verify:
+  deployment-needed:
     if: github.repository == 'AgoraIO-Community/agora-speaking-coach-demo' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    outputs:
+      deploy: ${{ steps.changes.outputs.deploy }}
+    steps:
+      - uses: actions/checkout@v4
+        if: github.event_name == 'push'
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Check for a package version-only change
+        id: changes
+        env:
+          BEFORE: ${{ github.event.before }}
+        run: |
+          deploy=true
+          if [[ "$GITHUB_EVENT_NAME" == push ]] && git cat-file -e "$BEFORE^{commit}" 2>/dev/null; then
+            changed=$(git diff --name-only "$BEFORE" "$GITHUB_SHA")
+            if [[ "$changed" == package.json ]]; then
+              if node <<'NODE'
+          const { execFileSync } = require('node:child_process');
+          const { isDeepStrictEqual } = require('node:util');
+
+          function readPackage(revision) {
+            return JSON.parse(execFileSync('git', ['show', revision + ':package.json'], { encoding: 'utf8' }));
+          }
+
+          const { version: previousVersion, ...previous } = readPackage(process.env.BEFORE);
+          const { version: currentVersion, ...current } = readPackage(process.env.GITHUB_SHA);
+          process.exitCode = previousVersion !== currentVersion && isDeepStrictEqual(previous, current) ? 0 : 1;
+          NODE
+              then
+                deploy=false
+              fi
+            fi
+          fi
+          echo "deploy=$deploy" >> "$GITHUB_OUTPUT"
+
+  verify:
+    needs: deployment-needed
+    if: needs.deployment-needed.outputs.deploy == 'true'
     uses: ./.github/workflows/ci.yml
 
   deploy:
@@ -137,7 +177,7 @@ jobs:
           DEPLOYMENT_URL: ${{ steps.publish.outputs.url }}
         run: |
           {
-            echo '### Speaking Coach production deployment'
+            echo '### Multilingual Speaking Coach production deployment'
             echo "Source revision: $GITHUB_SHA"
             echo "Deployment: $DEPLOYMENT_URL"
             echo 'Production: https://agora-speaking-coach-demo.vercel.app'

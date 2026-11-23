@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
+import { PRACTICE_LANGUAGES } from '../lib/lessons';
 import { Agent } from 'agora-agents';
 import { NextRequest } from 'next/server';
 import { getScenarioTools } from '../lib/agent-tools';
@@ -28,12 +29,13 @@ async function main() {
     return { start: async () => { starts += 1; return 'conversation-only-agent'; } };
   }) as unknown as typeof Agent.prototype.createSession;
   try {
-    for (const origin of [undefined, 'https://legacy-tools.example.test']) {
+    for (const { id, voice } of [{ id: undefined, voice: 'Spanish_SereneWoman' }, ...PRACTICE_LANGUAGES]) {
+      const origin = id ? 'https://legacy-tools.example.test' : undefined;
       if (origin) process.env.TOP_TEN_SCENARIO_TOOL_BASE_URL = origin;
       else delete process.env.TOP_TEN_SCENARIO_TOOL_BASE_URL;
       const response = await POST(new NextRequest('http://localhost/api/invite-agent', {
         method: 'POST',
-        body: JSON.stringify({ requester_id: 'voice-user', channel_name: 'voice-only-channel' }),
+        body: JSON.stringify({ requester_id: 'voice-user', channel_name: 'voice-only-channel', practice_language: id }),
       }));
       const result = await response.json();
       assert.equal(response.status, 200, 'A voice conversation must start without a business session: ' + JSON.stringify(result));
@@ -43,9 +45,15 @@ async function main() {
       assert.equal(actual.advancedFeatures?.enable_tools, false);
       assert.deepEqual(actual.llm?.tools ?? [], []);
       assert.deepEqual((sessionOptions as { remoteUids: string[] }).remoteUids, ['voice-user']);
-      assert.equal(actual.instructions, getScenarioPrompt(config.id));
+      assert.equal(actual.instructions, getScenarioPrompt(config.id, id));
+      assert.equal((actual.tts?.params?.voice_setting as { voice_id?: string } | undefined)?.voice_id, voice);
     }
-    assert.equal(starts, 2);
+    const unsupported = await POST(new NextRequest('http://localhost/api/invite-agent', {
+      method: 'POST',
+      body: JSON.stringify({ requester_id: 'voice-user', channel_name: 'voice-only-channel', practice_language: 'ja' }),
+    }));
+    assert.equal(unsupported.status, 400);
+    assert.equal(starts, 4);
   } finally {
     Agent.prototype.createSession = originalCreate;
     if (originalOrigin === undefined) delete process.env.TOP_TEN_SCENARIO_TOOL_BASE_URL;

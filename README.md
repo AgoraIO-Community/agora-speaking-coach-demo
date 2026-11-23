@@ -1,8 +1,8 @@
-# Agora Speaking Coach Demo
+# Agora Multilingual Speaking Coach Demo
 
 [English](README.md) | [简体中文](README.zh-CN.md) | [日本語](README.ja.md)
 
-A voice AI speaking coach demo built with Agora and Next.js. This example focuses on Mandarin: practice short Chinese conversations with English guidance, written pinyin, and vocabulary or grammar feedback based on recognized text.
+Practice Spanish, French or German with English instructions, explanations and feedback. Ask explicitly for immersion in the selected language.
 
 **[Try the live demo →](https://agora-speaking-coach-demo.vercel.app)**
 
@@ -14,18 +14,15 @@ A voice AI speaking coach demo built with Agora and Next.js. This example focuse
 
 [Features](#features) · [Tech stack](#tech-stack) · [Run locally](#run-locally) · [Deploy to Vercel](#deploy-to-vercel) · [How it works](#how-it-works) · [Customize](#customize) · [FAQ](#faq) · [More](#more)
 
-<!-- Recipes URL: add the published Agora Recipes page URL here. -->
-<!-- Video placement: add a linked cover image here once the actual demo video is ready. Show a beginner practicing a short Mandarin exchange, checking written pinyin, and receiving English expression feedback. Use a descriptive alt and public video URL. Verify playback or fallback links on GitHub and Recipes. -->
-
 <a id="what-you-can-do"></a>
+<a id="features"></a>
 
 ## Features
 
-- **Everyday role-play:** practice introductions, restaurant ordering, and workplace conversations.
-- **Choose your level:** practice beginner, intermediate, or advanced conversations with English explanations.
-- **Written learning aids:** browse phrase cards with Chinese characters, tone-marked pinyin, and English meanings.
-- **Expression feedback:** ask for a vocabulary or grammar correction, repetition, or a recap of what you practiced.
-- **Voice and transcript:** hear the coach and review recognized conversation text.
+- Practice introductions, restaurant ordering and workplace conversations.
+- Use beginner, intermediate or advanced practice with English guidance.
+- Read expressions in the selected language and English meanings in the Phrasebook.
+- Receive vocabulary or grammar feedback based on recognized text.
 
 ## Tech Stack
 
@@ -85,7 +82,7 @@ pnpm run doctor
 pnpm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000), choose **Practice Mandarin**, and allow microphone access. Ask the coach to summarize your practice if needed, then click the hang-up button (**End conversation**).
+Open [http://localhost:3000](http://localhost:3000), select a practice language, choose **Start practice**, and allow microphone access. Ask the coach to summarize your practice if needed, then click the hang-up button (**End conversation**).
 
 Each session ends automatically after 10 minutes; choose Start again to continue.
 
@@ -103,10 +100,10 @@ The maintained Community demo uses GitHub Actions for production deployment afte
 
 ## How It Works
 
-1. **Start practicing:** Choose **Practice Mandarin** and allow microphone access.
-2. **Choose a goal:** Tell the coach your level and the conversation you want to practice.
-3. **Take turns:** Practice short Mandarin exchanges with English guidance and written phrase aids.
-4. **Review your practice:** Ask for expression feedback, a recap, or a different exercise.
+1. Select Spanish, French or German, then choose **Start practice** and allow microphone access.
+2. Try: “I am a beginner. Help me introduce myself in Spanish.”
+3. Use beginner, intermediate or advanced practice with English guidance.
+4. Receive vocabulary or grammar feedback based on recognized text.
 
 ### Architecture
 
@@ -126,21 +123,17 @@ Next.js issues browser tokens and supplies the scenario instructions when starti
 
 ## FAQ
 
-### Do I need separate model API keys?
+### What should I say?
 
-Not for the default configuration. The demo uses Agora-managed model access.
+I am a beginner. Help me introduce myself in Spanish.
 
-### How do I choose a topic or difficulty?
+### What is available?
 
-Tell the coach your level and what you want to practice. Try “I am a beginner. Help me introduce myself in Mandarin.” Selecting phrase cards does not change the conversation topic; ask the coach directly.
+Practice introductions, restaurant ordering and workplace conversations. Use beginner, intermediate or advanced practice with English guidance. Read expressions in the selected language and English meanings in the Phrasebook. Receive vocabulary or grammar feedback based on recognized text.
 
-### Why does the coach keep explaining things in English?
+### What remains simulated?
 
-English guidance is the default at every level. Ask explicitly for Mandarin-only practice if you want immersion, or ask for English if you get stuck. A request for harder practice changes the phrases, not the guidance language.
-
-### Can it tell whether I pronounced a word correctly?
-
-Feedback uses recognized text, not acoustic pronunciation or tone assessment. The coach can model a phrase and help with vocabulary or grammar, but it cannot certify that your pronunciation was correct.
+Practice uses recognized text. No pronunciation scoring, certified proficiency or saved progress is provided. English guidance remains default unless immersion in the selected language is requested.
 
 ### Why can’t I start a voice session?
 

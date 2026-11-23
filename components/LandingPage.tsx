@@ -14,6 +14,7 @@ import type {
   AgentResponse,
   AgoraRenewalTokens,
 } from '../types/conversation';
+import { DEFAULT_PRACTICE_LANGUAGE, type PracticeLanguage } from '@/lib/lessons';
 import { getScenarioPresentation } from '@/lib/presentation';
 import type { AgentSignalSnapshot } from '@/lib/agent-signal';
 import { EMPTY_INSPECTION, type InspectionSnapshot } from '@/lib/inspection';
@@ -71,6 +72,7 @@ const SESSION_LIMIT_MS = 10 * 60 * 1000;
 
 export default function LandingPage() {
   const scenario = getScenarioPresentation();
+  const [language, setLanguage] = useState<PracticeLanguage>(DEFAULT_PRACTICE_LANGUAGE);
   const [showConversation, setShowConversation] = useState(false);
   const [activity, setActivity] = useState<AgentSignalSnapshot>({
     state: 'idle',
@@ -153,6 +155,7 @@ export default function LandingPage() {
           body: JSON.stringify({
             requester_id: responseData.uid,
             channel_name: responseData.channel,
+            practice_language: language,
           } as ClientStartRequest),
         })
           .then(async (res) => {
@@ -340,6 +343,7 @@ export default function LandingPage() {
       <Dialog>
         <ScenarioIdentity
           scenario={scenario}
+          language={language}
           onInspect={() => setInspectorOpen(true)}
         />
         <ScenarioFaq />
@@ -374,7 +378,7 @@ export default function LandingPage() {
               className="demo-conversation"
             />
             <div className="demo-ended-actions">
-              <Button variant="outline" onClick={handleStartConversation}>Start again</Button>
+              <Button variant="outline" onClick={() => { setEnded(false); setError(null); }}>Start another practice</Button>
               <Button onClick={openBuild}>Build Now</Button>
             </div>
           </section>
@@ -383,6 +387,8 @@ export default function LandingPage() {
             scenario={scenario}
             isLoading={isLoading}
             error={error}
+            language={language}
+            onLanguageChange={setLanguage}
             onStart={handleStartConversation}
             onBuild={openBuild}
           />

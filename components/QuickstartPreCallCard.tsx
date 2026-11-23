@@ -5,6 +5,7 @@ import { Button } from './ui/button';
 import { Alert, AlertDescription } from './ui/alert';
 import type { ScenarioPresentation } from '@/lib/presentation';
 
+import { isPracticeLanguage, PRACTICE_LANGUAGES, type PracticeLanguage } from '@/lib/lessons';
 import { LessonPreview } from './LessonPreview';
 
 function ScenarioFeatures({ scenario }: { scenario: ScenarioPresentation }) {
@@ -48,12 +49,16 @@ export function QuickstartPreCallCard({
   scenario,
   isLoading,
   error,
+  language,
+  onLanguageChange,
   onStart,
   onBuild,
 }: {
   scenario: ScenarioPresentation;
   isLoading: boolean;
   error: string | null;
+  language: PracticeLanguage;
+  onLanguageChange: (language: PracticeLanguage) => void;
   onStart: () => void;
   onBuild: React.MouseEventHandler<HTMLButtonElement>;
 }) {
@@ -62,6 +67,19 @@ export function QuickstartPreCallCard({
       <h2>{scenario.name}</h2>
       <p className="demo-lead">{scenario.summary}</p>
       <ScenarioFeatures scenario={scenario} />
+      <label className="demo-practice-language text-sm font-medium">
+        Practice language
+        <select
+          className="h-11 rounded-md border border-input bg-background px-3 pr-8"
+          value={language}
+          disabled={isLoading}
+          onChange={({ target: { value } }) => {
+            if (isPracticeLanguage(value)) onLanguageChange(value);
+          }}
+        >
+          {PRACTICE_LANGUAGES.map(({ id, name }) => <option key={id} value={id}>{name}</option>)}
+        </select>
+      </label>
       <div className="demo-welcome-actions">
         <Button
           size="lg"
@@ -78,12 +96,14 @@ export function QuickstartPreCallCard({
         </Button>
         <Button size="lg" variant="outline" onClick={onBuild}>Build Now</Button>
       </div>
+      <p className="demo-note">Microphone access required. Sessions end automatically after 10 minutes.</p>
+      <p className="demo-note">{scenario.boundaryShort}</p>
       {error ? (
         <Alert variant="destructive">
           <AlertDescription>{error}</AlertDescription>
         </Alert>
       ) : null}
-      <LessonPreview />
+      <LessonPreview language={language} />
     </section>
   );
 }

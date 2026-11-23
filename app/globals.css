@@ -7,12 +7,12 @@
 @import '../styles/faq.css';
 @source "../node_modules/agora-agent-uikit/dist";
 
-.mandarin-lessons { margin-top: 2rem; width: 100%; text-align: left; }
-.mandarin-lessons h3 { font-size: 1rem; font-weight: 600; }
-.mandarin-phrases { display: grid; gap: .75rem; padding: 0; margin-top: 1rem; list-style: none; }
-.mandarin-phrases li { display: grid; gap: .25rem; padding: .875rem 1rem; border: 1px solid var(--border); border-radius: .75rem; background: var(--card); overflow-wrap: anywhere; }
-.mandarin-phrases strong { font-size: 1.1rem; font-weight: 500; }
-.mandarin-phrases span { color: var(--muted-foreground); font-size: .875rem; line-height: 1.5; }
+.spanish-lessons { margin-top: 2rem; width: 100%; text-align: left; }
+.spanish-lessons h3 { font-size: 1rem; font-weight: 600; }
+.spanish-phrases { display: grid; gap: .75rem; padding: 0; margin-top: 1rem; list-style: none; }
+.spanish-phrases li { display: grid; gap: .25rem; padding: .875rem 1rem; border: 1px solid var(--border); border-radius: .75rem; background: var(--card); overflow-wrap: anywhere; }
+.spanish-phrases strong { font-size: 1.1rem; font-weight: 500; }
+.spanish-phrases span { color: var(--muted-foreground); font-size: .875rem; line-height: 1.5; }
 
 :root {
   color-scheme: light;
@@ -726,6 +726,16 @@ button:disabled {
   color: var(--muted-foreground);
   font-size: 16px;
   line-height: 28px;
+}
+.demo-practice-language {
+  display: grid;
+  width: fit-content;
+  min-width: 160px;
+  gap: 8px;
+  margin-top: 24px;
+}
+.demo-practice-language + .demo-welcome-actions {
+  margin-top: 20px;
 }
 .demo-welcome-actions {
   display: flex;

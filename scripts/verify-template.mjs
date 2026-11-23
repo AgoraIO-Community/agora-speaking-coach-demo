@@ -27,7 +27,7 @@ assert.match(read('postcss.config.mjs'), /@tailwindcss\/postcss/);
 for (const file of ['app/page.tsx', 'components/LandingPage.tsx']) {
   assert.ok(!/entry=recipes|skipEntryDialog/.test(read(file)), 'Do not couple entry behavior to Recipes: ' + file);
 }
-for (const field of ['recognition.model', 'recognition.language', 'reasoning.model', 'synthesis.model', 'synthesis.voice']) {
+for (const field of ['recognition.model', 'recognition.language', 'reasoning.model', 'synthesis.model']) {
   assert.ok(read('app/api/invite-agent/route.ts').includes('RUNTIME_PROFILE.' + field), 'Invite must consume runtime-profile: ' + field);
 }
 for (const command of ['verify:signal', 'verify:inspection']) {

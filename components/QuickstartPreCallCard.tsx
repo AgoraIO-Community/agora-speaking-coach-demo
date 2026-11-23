@@ -1,6 +1,6 @@
 'use client';
 
-import { Loader2, Mic } from 'lucide-react';
+import { ChevronDown, Loader2, Mic } from 'lucide-react';
 import { Button } from './ui/button';
 import { Alert, AlertDescription } from './ui/alert';
 import type { ScenarioPresentation } from '@/lib/presentation';
@@ -67,37 +67,43 @@ export function QuickstartPreCallCard({
       <h2>{scenario.name}</h2>
       <p className="demo-lead">{scenario.summary}</p>
       <ScenarioFeatures scenario={scenario} />
-      <label className="demo-practice-language text-sm font-medium">
-        Practice language
-        <select
-          className="h-11 rounded-md border border-input bg-background px-3 pr-8"
-          value={language}
-          disabled={isLoading}
-          onChange={({ target: { value } }) => {
-            if (isPracticeLanguage(value)) onLanguageChange(value);
-          }}
-        >
-          {PRACTICE_LANGUAGES.map(({ id, name }) => <option key={id} value={id}>{name}</option>)}
-        </select>
-      </label>
       <div className="demo-welcome-actions">
-        <Button
-          size="lg"
-          disabled={isLoading}
-          aria-busy={isLoading}
-          onClick={onStart}
-        >
-          {isLoading ? (
-            <Loader2 className="animate-spin" data-icon="inline-start" />
-          ) : (
-            <Mic data-icon="inline-start" />
-          )}
-          {isLoading ? 'Connecting…' : scenario.startLabel}
-        </Button>
-        <Button size="lg" variant="outline" onClick={onBuild}>Build Now</Button>
+        <label className="demo-practice-language text-sm font-medium">
+          Practice language
+          <span className="relative">
+            <select
+              className="h-11 w-full appearance-none rounded-md border border-input bg-background ps-3 pe-10 forced-colors:appearance-auto"
+              value={language}
+              disabled={isLoading}
+              onChange={({ target: { value } }) => {
+                if (isPracticeLanguage(value)) onLanguageChange(value);
+              }}
+            >
+              {PRACTICE_LANGUAGES.map(({ id, name }) => <option key={id} value={id}>{name}</option>)}
+            </select>
+            <ChevronDown
+              aria-hidden="true"
+              className="pointer-events-none absolute end-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground forced-colors:hidden"
+            />
+          </span>
+        </label>
+        <div className="demo-practice-buttons">
+          <Button
+            size="lg"
+            disabled={isLoading}
+            aria-busy={isLoading}
+            onClick={onStart}
+          >
+            {isLoading ? (
+              <Loader2 className="animate-spin" data-icon="inline-start" />
+            ) : (
+              <Mic data-icon="inline-start" />
+            )}
+            {isLoading ? 'Connecting…' : scenario.startLabel}
+          </Button>
+          <Button size="lg" variant="outline" onClick={onBuild}>Build Now</Button>
+        </div>
       </div>
-      <p className="demo-note">Microphone access required. Sessions end automatically after 10 minutes.</p>
-      <p className="demo-note">{scenario.boundaryShort}</p>
       {error ? (
         <Alert variant="destructive">
           <AlertDescription>{error}</AlertDescription>

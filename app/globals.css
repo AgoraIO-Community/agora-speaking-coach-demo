@@ -732,14 +732,16 @@ button:disabled {
   width: fit-content;
   min-width: 160px;
   gap: 8px;
-  margin-top: 24px;
 }
-.demo-practice-language + .demo-welcome-actions {
-  margin-top: 20px;
+.demo-practice-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
 }
 .demo-welcome-actions {
   display: flex;
   flex-wrap: wrap;
+  align-items: flex-end;
   gap: 12px;
   justify-content: flex-start;
   margin: 24px 0 10px;
@@ -829,6 +831,7 @@ button:disabled {
     padding: 24px 20px;
   }
   .demo-workspace-ready {
+    --demo-ready-signal-height: 72px;
     position: relative;
     grid-template-columns: 1fr;
     align-content: center;
@@ -838,7 +841,7 @@ button:disabled {
   .demo-workspace-ready .demo-sidebar {
     grid-column: 1;
     position: absolute;
-    top: 24px;
+    top: 0;
     right: 20px;
     width: 140px;
   }
@@ -846,7 +849,7 @@ button:disabled {
     grid-column: 1;
   }
   .demo-workspace-ready .demo-signal-canvas {
-    height: 72px;
+    height: var(--demo-ready-signal-height);
   }
   .demo-workspace-ready .demo-agent-control {
     top: -12px;
@@ -860,6 +863,7 @@ button:disabled {
     overflow: hidden;
   }
   .demo-workspace-ready .demo-welcome h2 {
+    min-block-size: var(--demo-ready-signal-height);
     padding-right: 148px;
   }
   .demo-welcome h2 {

@@ -1,14 +1,14 @@
-# Agora 口语教练演示
+# Agora 多语言口语教练演示
 
 [English](README.md) | [简体中文](README.zh-CN.md) | [日本語](README.ja.md)
 
-本文仅翻译文档；应用界面和教练指导默认使用英语，练习内容为普通话。下方目标说明使用英文试说，中文仅供理解。
+本文仅翻译文档；应用界面使用英语。支持西班牙语、法语和德语，默认用英语引导。
 
-基于 Agora 和 Next.js 的语音 AI 口语教练演示。本示例专注普通话：通过英语指导、书面拼音及基于识别文字的词汇或语法反馈，练习简短中文对话。
+以英语提供引导和反馈，用所选语言练习自我介绍、点餐和职场交流。
 
 **[在线体验 →](https://agora-speaking-coach-demo.vercel.app)**
 
-**[在 Agora Recipes 探索更多语音 AI 演示 →](https://recipes.agora.io/)**
+**[Explore more voice AI demos on Agora Recipes →](https://recipes.agora.io/)**
 
 [![Agora](https://img.shields.io/badge/Voice_AI-Agora-099DFD)](https://www.agora.io/en/products/conversational-ai-engine/)
 [![Next.js](https://img.shields.io/badge/Next.js-black?logo=nextdotjs&logoColor=white)](https://nextjs.org/docs)
@@ -17,18 +17,14 @@
 [功能](#features) · [技术栈](#tech-stack) · [本地运行](#run-locally) · [部署到 Vercel](#deploy-to-vercel) · [使用流程](#how-it-works) · [定制](#customize) · [常见问题](#faq) · [更多](#more)
 
 <a id="what-you-can-do"></a>
-
 <a id="features"></a>
 
 ## 功能
 
-- **日常角色扮演：** 练习自我介绍、餐厅点餐及职场对话。
-- **难度选择：** 以英语讲解练习初级、中级或高级对话。
-- **书面辅助：** 浏览包含汉字、带声调拼音和英语释义的短语卡。
-- **表达反馈：** 请求词汇或语法纠正、重复示范或练习摘要。
-- **语音与转写：** 听教练示范并查看识别出的对话文字。
-
-<a id="tech-stack"></a>
+- 选择初级、中级或高级难度，默认用英语解释。
+- 练习西语自我介绍、点餐和职场对话。
+- Phrasebook 展示西语表达和英文释义，不再使用中文或拼音。
+- 基于转写文本纠正词汇和语法；不评分发音或保存进度。
 
 ## 技术栈
 
@@ -91,7 +87,7 @@ pnpm run doctor
 pnpm run dev
 ```
 
-打开 [http://localhost:3000](http://localhost:3000)，选择 **Practice Mandarin** 并允许使用麦克风。需要时可请助手总结对话，点击挂断按钮（**End conversation**）结束。
+打开 [http://localhost:3000](http://localhost:3000)，选择西班牙语、法语或德语，再点击 **Start practice** 并允许使用麦克风。需要时可请助手总结对话，点击挂断按钮（**End conversation**）结束。
 
 每次会话满 10 分钟自动结束，点击 Start again 可重新开始。
 
@@ -113,10 +109,10 @@ Community 官方演示站通过 GitHub Actions 在验证通过后部署生产环
 
 ## 使用流程
 
-1. **开始练习：** 选择 **Practice Mandarin** 并允许使用麦克风。
-2. **选择目标：** 告诉教练你的水平和想练习的对话。
-3. **轮流对话：** 结合英语指导和书面短语辅助，练习简短普通话交流。
-4. **回顾练习：** 请求表达反馈、摘要或更换练习。
+1. 选择西班牙语、法语或德语，再点击 **Start practice** 并允许麦克风访问。
+2. 试说：“I am a beginner. Help me introduce myself in Spanish.”
+3. 练习西语自我介绍、点餐和职场对话。
+4. 基于转写文本纠正词汇和语法；不评分发音或保存进度。
 
 ### 架构
 
@@ -138,21 +134,17 @@ Next.js 签发浏览器 token，并在启动 Agora Agent 时提供场景指令�
 
 ## 常见问题
 
-### 需要额外的模型 API Key 吗？
+### 可以尝试什么？
 
-默认配置不需要，演示使用 Agora 托管的模型访问。
+I am a beginner. Help me introduce myself in Spanish.
 
-### 如何选择主题或难度？
+### 能力范围是什么？
 
-告诉教练你的水平和目标，例如：“I am a beginner. Help me introduce myself in Mandarin.”（意为“我是初学者，帮我用普通话自我介绍。”）选择短语卡不会改变对话主题，需要直接告诉教练。
+选择初级、中级或高级难度，默认用英语解释。 练习西语自我介绍、点餐和职场对话。 Phrasebook 展示西语表达和英文释义，不再使用中文或拼音。 基于转写文本纠正词汇和语法；不评分发音或保存进度。
 
-### 为什么教练一直使用英语解释？
+### 哪些内容不会实际执行？
 
-所有水平默认使用英语指导。需要沉浸练习时请明确要求只用普通话，卡住时可请求英语解释。提高难度会调整短语，不会自动切换指导语言。
-
-### 它能判断发音是否正确吗？
-
-反馈依据识别出的文字，不进行声学发音或声调评估。教练可示范短语、帮助改进词汇和语法，但不能认证发音正确。
+所有业务资料均为虚构示例。结果仅用于当前对话，不写入外部系统、不通知他人，也不跨会话保存。口语教练不提供发音评分。
 
 ### 为什么无法启动语音会话？
 

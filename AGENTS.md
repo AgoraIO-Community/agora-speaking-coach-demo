@@ -1,10 +1,12 @@
 # Agent Development Guide
 
-## Conversation-only first version
+## First-version scope
 
-This first version is conversation-only. No business data lookup, external tools, database, record writes, saved results, or cross-session business history are available. Keep details in the current conversation. Do not claim a real registration, reminder, survey submission, callback, payment or saved result. Do not request secrets or unnecessary personal identifiers.
+Practice Spanish, French or German with English instructions, explanations and feedback. Ask explicitly for immersion in the selected language.
 
-This guide is for coding agents making changes in `agora-speaking-coach-demo`.
+Feedback is based on recognized text, not acoustic analysis. Do not score or assess pronunciation, accent, fluency or certified proficiency, and do not infer a CEFR level. Do not invent learner utterances or treat lesson examples as actual history. Ask for repetition when recognition is unclear. Role-play is fictional and does not place orders, schedule meetings or save progress. Keep exercise details only in this conversation; do not infer real personal attributes from fictional practice. English guidance is the default unless immersion in the selected language is explicitly requested; a request for harder practice is not consent to immersion. Do not request legal names, addresses, payment details or secrets.
+
+This first version is conversation-only. No business data lookup, external tools, database, record writes, saved results, or cross-session business history are available. Keep corrected choices only in the current conversation.
 
 ## Shared scenario UI requirements
 
@@ -26,7 +28,7 @@ Use a United States setting for fictional business examples, UI copy, Agent cont
 
 Maintain `README.md` in English, `README.zh-CN.md` in Simplified Chinese, and `README.ja.md` in Japanese. These localized README files are an explicit exception to the English-only rule below. Keep all three READMEs aligned on features, setup, deployment, FAQ and limitations, with reciprocal language links. Documentation language does not change the application or Agent language.
 
-Use English for documentation, code comments and interface labels. Mandarin lesson text, coaching examples and transcript content are an intentional exception: Chinese characters, tone-marked pinyin and English meanings are required for this educational scenario.
+Use English for documentation, code comments and interface labels. Target-language lesson text, coaching examples and transcript content are an intentional exception: expressions in the selected language and English meanings are required for this educational scenario.
 
 ## Start here
 
@@ -47,9 +49,9 @@ Use Node.js 24 from .nvmrc and pnpm 9.15.9. Install with pnpm install --frozen-l
 - Sample token/start/stop endpoints are not production login or abuse controls. Provider retention is external to this source. Keep missing measurements unknown and Inspector outcomes manual.
 - Keep Inspector, Build, adopted UIkit source, source licenses and Docker support.
 
-## Mandarin coaching contract
+## multilingual coaching contract
 
-Use lib/lessons.ts for shared phrase cards and prompt material. Keep beginner/intermediate/advanced adaptation, persistent English guidance unless immersion is explicitly requested, one-question turns, at most one useful expression correction and a recap grounded in real learner turns. Example corrections are teaching fixtures, not learner history. Explain standard tones without claiming acoustic evaluation. No tools or saved progress are provided. Topic tabs are reading aids; the learner states the topic aloud. Ask for a recap before ending. See [speech provider references](ARCHITECTURE.md#speech-provider-references).
+Use lib/lessons.ts for shared phrase cards and prompt material. Keep beginner/intermediate/advanced adaptation, persistent English guidance unless immersion is explicitly requested, one-question turns, at most one useful expression correction and a recap grounded in real learner turns. Example corrections are teaching fixtures, not learner history. Model standard expressions in the selected language without claiming acoustic evaluation. No tools or saved progress are provided. Topic tabs are reading aids; the learner states the topic aloud. Ask for a recap before ending. See [speech provider references](ARCHITECTURE.md#speech-configuration).
 
 ## Prompt behavior contract — 2026-11-05
 
@@ -97,14 +99,12 @@ Local implementation does not authorize a commit. A commit does not authorize a 
 
 ## Usage FAQ contract
 
-Keep FAQ in the upper-right header beside Inspector. Place Build Now beside the start action, in the active voice dock and beside Start again after the session. `components/ScenarioFaq.tsx` and `styles/faq.css` follow the Voice Shopping drawer pattern: closed on entry, right-side on desktop, full-width on mobile, internally scrollable, and keyboard accessible. Opening FAQ must not start a session or request microphone access. Keep answers consistent with this scenario’s conversation-only scope. Preserve the coach Phrasebook where present.
+Keep FAQ in the upper-right header beside Inspector and Build. `components/ScenarioFaq.tsx` and `styles/faq.css` follow the Voice Shopping drawer pattern: closed on entry, right-side on desktop, full-width on mobile, internally scrollable, and keyboard accessible. Opening FAQ must not start a session or request microphone access. Keep answers consistent with this scenario’s conversation-only scope. Preserve the coach Phrasebook where present.
 
 
-## Phase-one conversation update — 2026-11-08
+## Scenario update — 2026-11-18
 
-Practice short Mandarin phrases with English instructions, explanations and feedback throughout; Mandarin immersion requires an explicit request. This first version is conversation-only. No business data lookup, external tools, database, record writes, saved results, or cross-session business history are available. Keep details in the current conversation. Do not claim a real registration, reminder, survey submission, callback, payment or saved result. Do not request secrets or unnecessary personal identifiers.
-
-See [current capabilities](README.md#what-you-can-do), the [conversation contract](ARCHITECTURE.md#conversation-behavior) and [verification guidance](AGENTS.md#verification-and-maintenance). Tools remain disabled, and no persistent business operations are provided.
+Practice Spanish, French or German with English instructions, explanations and feedback. Ask explicitly for immersion in the selected language. Follow the current workflow in `lib/agent-config.ts`. Existing repository, package, recipe and internal identifiers are retained for entry compatibility; they are not public scenario labels.
 
 ## Typography
 
@@ -119,3 +119,13 @@ The header countdown sits immediately before connection status in 12px muted tex
 ## npm scaffold releases
 
 The application remains private. In the upstream Community repository, `pnpm run npm:build` creates the separate public creator package and `pnpm run npm:test` tests the installed tarball offline. Generated projects omit `scripts/npm/`, those two npm scripts, the npm release workflow, the official production deployment workflow and maintainer-only release documentation. They retain application verification, general CI and Docker verification. See the upstream [release setup](https://github.com/AgoraIO-Community/agora-speaking-coach-demo/blob/main/docs/npm-release.md) for publishing and official website deployment. The official deployment workflow filters main updates by runtime/build paths and calls CI before publishing; README-only updates do not deploy. Keep native Vercel Git deployment disconnected for the official site. Do not publish or change remote configuration without separate authorization.
+
+<!-- BEGIN:nextjs-agent-rules -->
+
+## This is NOT the Next.js you know
+
+This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
+
+This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
+
+<!-- END:nextjs-agent-rules -->

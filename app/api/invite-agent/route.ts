@@ -10,6 +10,7 @@ import {
 import { ConvoAITokenBuilder } from 'agora-token';
 import { ClientStartRequest, AgentResponse } from '@/types/conversation';
 import { DEFAULT_AGENT_UID, TOKEN_LIFETIME_SECONDS } from '@/lib/agora';
+import { DEFAULT_PRACTICE_LANGUAGE, getPracticeLanguage, isPracticeLanguage } from '@/lib/lessons';
 import { RUNTIME_PROFILE } from '@/lib/runtime-profile';
 import { getScenarioConfig, getScenarioPrompt } from '@/lib/agent-config';
 import { getScenarioTools } from '@/lib/agent-tools';
@@ -28,7 +29,11 @@ export async function POST(request: NextRequest) {
     // --- 1. Parse request ---
 
     const body: ClientStartRequest = await request.json();
-    const { requester_id, channel_name } = body;
+    const { requester_id, channel_name, practice_language } = body;
+    const language = practice_language === undefined ? DEFAULT_PRACTICE_LANGUAGE : practice_language;
+    if (!isPracticeLanguage(language)) {
+      return NextResponse.json({ error: 'Unsupported practice_language' }, { status: 400 });
+    }
 
     // Validate required env vars on first request so misconfiguration surfaces
     // with a clear error message rather than a silent failure.
@@ -46,7 +51,7 @@ export async function POST(request: NextRequest) {
 
     // AgoraClient authenticates API calls to the Agora Conversational AI service.
     // area: change to Area.EU or Area.AP for European or Asia-Pacific deployments.
-    const scenario = getScenarioConfig();
+    const scenario = getScenarioConfig(language);
     const scenarioTools = getScenarioTools();
     // The explicit builder avoids the SDK 2.14 / agora-token 2.0.7
     // positional-argument mismatch that otherwise creates a one-second token.
@@ -65,7 +70,7 @@ export async function POST(request: NextRequest) {
     // Omit vendor API keys for supported models — AgentKit infers reseller presets on start (see Agora Console / billing).
     const agent = new Agent({
       client,
-      instructions: getScenarioPrompt(scenario.id),
+      instructions: getScenarioPrompt(scenario.id, language),
       greeting: scenario.greeting,
       failureMessage: 'Please wait a moment.',
       maxHistory: 50,
@@ -144,7 +149,7 @@ export async function POST(request: NextRequest) {
       .withTts(
         new MiniMaxTTS({
           model: RUNTIME_PROFILE.synthesis.model,
-          voiceId: RUNTIME_PROFILE.synthesis.voice,
+          voiceId: getPracticeLanguage(language).voice,
         }),
         // BYOK — ElevenLabs (set NEXT_ELEVENLABS_API_KEY; optional NEXT_ELEVENLABS_VOICE_ID)
         // new (await import('agora-agents')).ElevenLabsTTS({

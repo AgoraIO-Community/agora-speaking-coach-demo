@@ -1,53 +1,166 @@
-export const lessons = [
+const spanishLessons = [
   {
-    id: 'introductions', title: 'Introduce yourself',
-    setting: 'Meet a Mandarin-speaking neighbor in Boston. Use a fictional name.',
-    request: 'I am a beginner. Help me introduce myself in Mandarin.',
-    question: '你叫什么名字？',
-    goal: 'Introduce yourself and exchange one or two everyday details with a neighbor.',
-    followUpQuestions: { beginner: '你住在哪里？', intermediate: '你平时喜欢做什么？', advanced: '你会怎样向新同事介绍自己的工作？' },
-    phrases: [
-      { chinese: '你好，我叫 Alex。', pinyin: 'Nǐ hǎo, wǒ jiào Alex.', english: 'Hello, my name is Alex.' },
-      { chinese: '我住在波士顿。', pinyin: 'Wǒ zhù zài Bōshìdùn.', english: 'I live in Boston.' },
-      { chinese: '很高兴认识你。', pinyin: 'Hěn gāoxìng rènshi nǐ.', english: 'Nice to meet you.' },
+    "id": "introductions",
+    "title": "Introduce yourself",
+    "setting": "Meet a Spanish-speaking neighbor in Boston. Use a fictional name.",
+    "request": "I am a beginner. Help me introduce myself in Spanish.",
+    "question": "¿Cómo te llamas?",
+    "goal": "Introduce yourself and exchange everyday details.",
+    "followUpQuestions": {
+      "beginner": "¿Dónde vives?",
+      "intermediate": "¿Qué te gusta hacer en tu tiempo libre?",
+      "advanced": "¿Cómo describirías tu trabajo a un nuevo compañero?"
+    },
+    "phrases": [
+      {
+        "spanish": "Hola, me llamo Alex.",
+        "english": "Hello, my name is Alex."
+      },
+      {
+        "spanish": "Vivo en Boston.",
+        "english": "I live in Boston."
+      },
+      {
+        "spanish": "Mucho gusto.",
+        "english": "Nice to meet you."
+      }
     ],
-    correction: { learner: '我名字是 Alex。', alternative: '我叫 Alex。', explanation: 'Your meaning is clear. 我叫 is a more natural way to introduce your name.' },
+    "correction": {
+      "learner": "Yo vivir en Boston.",
+      "alternative": "Vivo en Boston.",
+      "explanation": "Use vivo for I live. The subject yo is optional here."
+    }
   },
   {
-    id: 'restaurant', title: 'Order a meal',
-    setting: 'Role-play at a fictional Chinese restaurant in Seattle. No real order is placed.',
-    request: 'Let us practice ordering food in Mandarin. Explain new words in English.',
-    question: '你想吃什么？',
-    goal: 'Order a meal politely and express one preference in a fictional restaurant.',
-    followUpQuestions: { beginner: '你想喝什么？', intermediate: '你还有什么要求？', advanced: '如果服务员推荐的菜太辣，你会怎样解释自己的偏好？' },
-    phrases: [
-      { chinese: '我想要一碗面。', pinyin: 'Wǒ xiǎng yào yì wǎn miàn.', english: 'I would like a bowl of noodles.' },
-      { chinese: '请不要放辣椒。', pinyin: 'Qǐng bú yào fàng làjiāo.', english: 'Please do not add chili peppers.' },
-      { chinese: '可以给我一杯水吗？', pinyin: 'Kěyǐ gěi wǒ yì bēi shuǐ ma?', english: 'Could I have a glass of water?' },
+    "id": "restaurant",
+    "title": "Order a meal",
+    "setting": "Role-play at a fictional Spanish-speaking restaurant in Seattle. No order is placed.",
+    "request": "Let us practice ordering food in Spanish. Explain new words in English.",
+    "question": "¿Qué te gustaría pedir?",
+    "goal": "Order politely and express one preference.",
+    "followUpQuestions": {
+      "beginner": "¿Qué quieres beber?",
+      "intermediate": "¿Tienes alguna otra preferencia?",
+      "advanced": "¿Cómo explicarías que prefieres un plato menos picante?"
+    },
+    "phrases": [
+      {
+        "spanish": "Quisiera una sopa, por favor.",
+        "english": "I would like a soup, please."
+      },
+      {
+        "spanish": "Sin picante, por favor.",
+        "english": "Not spicy, please."
+      },
+      {
+        "spanish": "¿Me trae un vaso de agua, por favor?",
+        "english": "Could you bring me a glass of water, please?"
+      }
     ],
-    correction: { learner: '我要一个面。', alternative: '我想要一碗面。', explanation: 'Use 碗 for a bowl of noodles. 我想要 makes the request softer.' },
+    "correction": {
+      "learner": "Quiero un sopa.",
+      "alternative": "Quiero una sopa.",
+      "explanation": "Sopa is feminine, so use una. Quisiera is another polite way to ask."
+    }
   },
   {
-    id: 'workplace', title: 'Talk with a colleague',
-    setting: 'Practice with a fictional Mandarin-speaking colleague at a U.S. office. No meeting is scheduled.',
-    request: 'I am intermediate. Practice a workplace conversation with me in Mandarin.',
-    question: '你今天忙吗？',
-    goal: 'Discuss a project with a colleague and explain a next step or a difference of opinion.',
-    followUpQuestions: { beginner: '你想先讨论哪一部分？', intermediate: '你会怎样说明项目的下一步？', advanced: '如果同事不同意你的方案，你会怎样解释理由并提出折中办法？' },
-    phrases: [
-      { chinese: '你今天有时间吗？', pinyin: 'Nǐ jīntiān yǒu shíjiān ma?', english: 'Do you have time today?' },
-      { chinese: '我们一起看看这个项目吧。', pinyin: 'Wǒmen yìqǐ kànkan zhège xiàngmù ba.', english: 'Let us look at this project together.' },
-      { chinese: '你可以再说一遍吗？', pinyin: 'Nǐ kěyǐ zài shuō yí biàn ma?', english: 'Could you say that again?' },
+    "id": "workplace",
+    "title": "Talk with a colleague",
+    "setting": "Practice with a fictional Spanish-speaking colleague in a U.S. office. No meeting is scheduled.",
+    "request": "I am intermediate. Practice a workplace conversation with me in Spanish.",
+    "question": "¿Tienes tiempo hoy?",
+    "goal": "Discuss a project and explain a next step or a different opinion.",
+    "followUpQuestions": {
+      "beginner": "¿Qué quieres revisar primero?",
+      "intermediate": "¿Cuál es el siguiente paso del proyecto?",
+      "advanced": "¿Cómo propondrías una alternativa si no estás de acuerdo?"
+    },
+    "phrases": [
+      {
+        "spanish": "¿Podemos revisar el proyecto?",
+        "english": "Can we review the project?"
+      },
+      {
+        "spanish": "Creo que podemos empezar mañana.",
+        "english": "I think we can start tomorrow."
+      },
+      {
+        "spanish": "¿Puedes repetirlo, por favor?",
+        "english": "Could you repeat that, please?"
+      }
     ],
-    correction: { learner: '我明天去会议。', alternative: '我明天参加会议。', explanation: '参加会议 is the usual expression for attending a meeting.' },
-  },
+    "correction": {
+      "learner": "Nosotros puede empezar mañana.",
+      "alternative": "Podemos empezar mañana.",
+      "explanation": "Use podemos with nosotros. You can omit nosotros when the meaning is clear."
+    }
+  }
 ] as const;
 
-export function getLessonContext(): string {
-  return lessons.map((lesson) => [
+function getSpanishLessonContext(): string {
+  return spanishLessons.map(lesson => [
     `## ${lesson.title}`, lesson.setting, `Practice goal: ${lesson.goal}`, `Starter question: ${lesson.question}`,
     `Follow-up examples by level: ${JSON.stringify(lesson.followUpQuestions)}`,
-    ...lesson.phrases.map((phrase) => `${phrase.chinese} | Reading aid: ${phrase.pinyin} | Meaning: ${phrase.english}`),
+    ...lesson.phrases.map(phrase => `${phrase.spanish} | Meaning: ${phrase.english}`),
     `Illustrative correction ONLY, not an actual learner response: ${JSON.stringify(lesson.correction)}`,
+  ].join('\n')).join('\n\n');
+}
+
+export const PRACTICE_LANGUAGES = [
+  { id: 'es', name: 'Spanish', voice: 'Spanish_SereneWoman' },
+  { id: 'fr', name: 'French', voice: 'French_MovieLeadFemale' },
+  { id: 'de', name: 'German', voice: 'German_SweetLady' },
+] as const;
+
+export type PracticeLanguage = (typeof PRACTICE_LANGUAGES)[number]['id'];
+export const DEFAULT_PRACTICE_LANGUAGE: PracticeLanguage = 'es';
+
+export function isPracticeLanguage(value: unknown): value is PracticeLanguage {
+  return PRACTICE_LANGUAGES.some(({ id }) => id === value);
+}
+
+export function getPracticeLanguage(language: PracticeLanguage) {
+  return PRACTICE_LANGUAGES.find(({ id }) => id === language)!;
+}
+
+const additionalPhrases = {
+  fr: [
+    ['Bonjour, je m’appelle Alex.', 'J’habite à Boston.', 'Enchanté de vous rencontrer.'],
+    ['Je voudrais une soupe, s’il vous plaît.', 'Pas épicé, s’il vous plaît.', 'Pourrais-je avoir un verre d’eau, s’il vous plaît ?'],
+    ['Pouvons-nous faire le point sur le projet ?', 'Je pense que nous pouvons commencer demain.', 'Pourriez-vous répéter, s’il vous plaît ?'],
+  ],
+  de: [
+    ['Hallo, ich heiße Alex.', 'Ich wohne in Boston.', 'Schön, Sie kennenzulernen.'],
+    ['Ich hätte gern eine Suppe, bitte.', 'Bitte nicht scharf.', 'Könnte ich bitte ein Glas Wasser bekommen?'],
+    ['Können wir das Projekt besprechen?', 'Ich glaube, wir können morgen anfangen.', 'Könnten Sie das bitte wiederholen?'],
+  ],
+} as const;
+
+const requests = [
+  (name: string) => `I am a beginner. Help me introduce myself in ${name}.`,
+  (name: string) => `Let’s practice ordering food in ${name}.`,
+  (name: string) => `I am intermediate. Practice a workplace conversation with me in ${name}.`,
+] as const;
+
+export function getLessons(language: PracticeLanguage) {
+  const name = getPracticeLanguage(language).name;
+  return spanishLessons.map((lesson, index) => ({
+    id: lesson.id,
+    title: lesson.title,
+    goal: lesson.goal,
+    request: requests[index](name),
+    phrases: lesson.phrases.map((phrase, phraseIndex) => ({
+      expression: language === 'es' ? phrase.spanish : additionalPhrases[language][index][phraseIndex],
+      english: phrase.english,
+    })),
+  }));
+}
+
+export function getLessonContext(language: PracticeLanguage = DEFAULT_PRACTICE_LANGUAGE): string {
+  if (language === 'es') return getSpanishLessonContext();
+  return getLessons(language).map(lesson => [
+    `## ${lesson.title}`,
+    `Practice goal: ${lesson.goal}`,
+    ...lesson.phrases.map(phrase => `${phrase.expression} | Meaning: ${phrase.english}`),
   ].join('\n')).join('\n\n');
 }

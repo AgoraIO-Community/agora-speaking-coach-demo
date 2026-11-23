@@ -3,7 +3,7 @@ import { getScenarioConfig, getScenarioPrompt } from '../lib/agent-config';
 import assert from 'node:assert/strict';
 import { getScenarioTools } from '../lib/agent-tools';
 import { getScenarioPresentation } from '../lib/presentation';
-import { lessons, getLessonContext } from '../lib/lessons';
+import { PRACTICE_LANGUAGES, getLessons, getLessonContext } from '../lib/lessons';
 import { RUNTIME_PROFILE } from '../lib/runtime-profile';
 import { DeepgramSTT, MiniMaxTTS } from 'agora-agents';
 const config = getScenarioConfig();
@@ -13,30 +13,33 @@ if (!getScenarioPrompt().includes('# Goal and conversation flow')) throw new Err
 assert.deepEqual(getScenarioTools(), [], 'The generic starter must not register business actions.');
 assert.equal(getScenarioPresentation().id, config.id, 'Presentation and Agent must identify the same demo.');
 const prompt = getScenarioPrompt();
-assert.match(prompt, /overseas English-speaking learners/);
-assert.match(prompt, /Do not score or assess pronunciation, tones/);
+assert.match(prompt, /English-speaking learners/);
+assert.match(prompt, /Do not score or assess pronunciation, accent/);
 assert.match(prompt, /Do not invent learner utterances/);
 assert.match(prompt, /at most one useful vocabulary or grammar correction/);
 assert.match(prompt, /one strength, up to two improvements grounded in actual learner turns/);
 assert.match(prompt, /Ask for repetition when recognition is unclear/);
-assert.match(prompt, /change topic or change difficulty/);
-assert.match(prompt, /Do not speak pinyin/);
-assert.equal(lessons.length, 3);
-assert.equal(new Set(lessons.map((lesson) => lesson.id)).size, 3);
-for (const lesson of lessons) {
-  assert.equal(lesson.phrases.length, 3);
-  assert.ok(getLessonContext().includes(lesson.setting));
-  assert.ok(prompt.includes(lesson.correction.alternative));
-  for (const phrase of lesson.phrases) {
-    assert.match(phrase.chinese, /\p{Script=Han}/u);
-    assert.match(phrase.pinyin, /[āáǎàēéěèīíǐìōóǒòūúǔùǖǘǚǜ]/);
-    assert.ok(prompt.includes(phrase.chinese) && prompt.includes(phrase.english));
+assert.match(prompt, /change topic, simplify or increase difficulty/);
+assert.match(prompt, /Spanish-only role-play only after an explicit request/);
+for (const { id, name, voice } of PRACTICE_LANGUAGES) {
+  const localizedPrompt = getScenarioPrompt(config.id, id);
+  assert.ok(localizedPrompt.includes(`# Bundled ${name} teaching material`));
+  assert.ok(getScenarioConfig(id).greeting.includes(name));
+  const lessons = getLessons(id);
+  assert.equal(new Set(lessons.map((lesson) => lesson.id)).size, 3);
+  for (const lesson of lessons) {
+    assert.equal(lesson.phrases.length, 3);
+    for (const { expression, english } of lesson.phrases) {
+      assert.ok(expression && english);
+      assert.ok(getLessonContext(id).includes(expression));
+      assert.ok(localizedPrompt.includes(expression) && localizedPrompt.includes(english));
+    }
   }
+  const synthesis = new MiniMaxTTS({ model: RUNTIME_PROFILE.synthesis.model, voiceId: voice }).toConfig();
+  assert.deepEqual(synthesis.params?.voice_setting, { voice_id: voice });
 }
 const recognition = new DeepgramSTT({ model: RUNTIME_PROFILE.recognition.model, language: RUNTIME_PROFILE.recognition.language }).toConfig();
 assert.equal(recognition.params?.language, 'multi');
-const synthesis = new MiniMaxTTS({ model: RUNTIME_PROFILE.synthesis.model, voiceId: RUNTIME_PROFILE.synthesis.voice }).toConfig();
-assert.deepEqual(synthesis.params?.voice_setting, { voice_id: 'Chinese (Mandarin)_Warm_Bestie' });
 assert.match(getScenarioPresentation().boundaryShort, /No pronunciation scores or saved learning progress/);
 assert.doesNotMatch(JSON.stringify([config, getScenarioPresentation()]), /it-support|FAQ|troubleshoot|printer|needs-human/i);
 console.log(`Scenario config passed: ${config.id}`);

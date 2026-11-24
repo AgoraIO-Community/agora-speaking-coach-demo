@@ -77,7 +77,6 @@ export async function POST(request: NextRequest) {
       instructions: getScenarioPrompt(scenario.id, language, lessonId),
       greeting: scenario.greeting,
       failureMessage: 'Please wait a moment.',
-      maxHistory: 50,
       // VAD controls how the agent detects the start and end of a user's turn.
       turnDetection: {
         config: {
@@ -129,7 +128,7 @@ export async function POST(request: NextRequest) {
           model: RUNTIME_PROFILE.reasoning.model,
           greetingMessage: scenario.greeting,
           failureMessage: 'Please wait a moment.',
-          maxHistory: 15,
+          maxHistory: 50,
           tools: scenarioTools.length > 0 ? scenarioTools : undefined,
           params: {
             max_tokens: 1024,
@@ -144,7 +143,7 @@ export async function POST(request: NextRequest) {
         //   model: 'gpt-4o-mini',
         //   greetingMessage: scenario.greeting,
         //   failureMessage: 'Please wait a moment.',
-        //   maxHistory: 15,
+        //   maxHistory: 50,
         //   maxTokens: 1024,
         //   temperature: 0.7,
         //   topP: 0.95,

@@ -44,6 +44,9 @@ async function main() {
       assert.equal(actual.advancedFeatures?.enable_rtm, true);
       assert.equal(actual.advancedFeatures?.enable_tools, false);
       assert.deepEqual(actual.llm?.tools ?? [], []);
+      // History is capped on the model config; the Agent-level option is deprecated and ignored when both are set.
+      assert.equal(actual.llm?.max_history, 50);
+      assert.equal(actual.maxHistory, undefined);
       assert.deepEqual((sessionOptions as { remoteUids: string[] }).remoteUids, ['voice-user']);
       assert.equal(actual.instructions, getScenarioPrompt(config.id, id));
       assert.equal((actual.tts?.params?.voice_setting as { voice_id?: string } | undefined)?.voice_id, voice);

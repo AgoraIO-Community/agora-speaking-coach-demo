@@ -1,8 +1,8 @@
 # Speaking Coach Architecture
 
-## Conversation-only first version
+## Scope
 
-This first version is conversation-only. No business data lookup, external tools, database, record writes, saved results, or cross-session business history are available. Keep details in the current conversation. Do not claim a real registration, reminder, survey submission, callback, payment or saved result. Do not request secrets or unnecessary personal identifiers.
+This version saves practice history and nothing else. Lessons practiced or marked complete, session dates and learner turn counts are stored per anonymous learner through a pluggable progress store. Corrections are stored only in coach tool mode, and conversation text only when conversation logging is configured; audio is never stored. No business data lookup or other external action is available. Do not claim a real registration, reminder, survey submission, callback or payment. Do not request secrets or unnecessary personal identifiers.
 
 ## Session time limit
 
@@ -22,7 +22,7 @@ One Next.js process owns the browser application and its HTTP routes. Agora clou
 Browser microphone <-> Agora RTC <-> managed Agent
 Browser transcript <- Agora RTM <- managed Agent
 Browser -- HTTPS --> Next.js token / invite / stop routes
-Agent config -> prompt -> Agent (no business tools)
+Agent config + learner history -> prompt -> Agent (coach tools only when COACH_PUBLIC_BASE_URL is set)
 ```
 
 ## Request And Event Flow
@@ -31,9 +31,9 @@ Agent config -> prompt -> Agent (no business tools)
 2. The browser logs into/subscribes to RTM and invites the managed Agent. The invite body contains `requester_id` and `channel_name`.
 3. RTC hooks join and publish the microphone after the StrictMode guard; the toolkit binds both transports.
 4. Audio travels over RTC. Transcript, Agent state, errors and reported latency travel over RTM.
-5. No business tools are registered by `lib/agent-tools.ts`. Inspector captures reported session evidence and optional user feedback, not an automatically verified business result.
+5. `lib/agent-tools.ts` registers no tools unless `COACH_PUBLIC_BASE_URL` is set; then it registers the two coach progress tools. Inspector captures reported session evidence and optional user feedback, not an automatically verified business result.
 6. Renewal keeps the joined RTC UID, RTM login UID and channel consistent.
-7. Ending stops the Agent, logs out RTM and unmounts hook-owned RTC/microphone resources. Retained evidence is not itself a saved business result.
+7. Ending stops the Agent, logs out RTM and unmounts hook-owned RTC/microphone resources. The page then reports the finished session to `/api/progress`. Inspector evidence is not itself a saved result.
 
 ## Ownership Boundaries
 
@@ -80,7 +80,7 @@ Japanese and Korean items carry a romanized reading aid (Hepburn; Revised Romani
 
 Only the selected lesson is injected into the coaching prompt, together with the title and objective of the next lesson. The landing-page lesson chooser is real session state: the selected `lesson_id` is sent with the start request. After a session the ended screen shows a practice summary built from data already in the browser (language, lesson, lesson vocabulary and the count of learner turns in the retained transcript). It does not generate corrections or scores and is not saved.
 
-The token route returns `{ token, uid, channel }`; stop accepts `{ agent_id }` and handles an already-stopping session idempotently. The selected lesson from lib/lessons.ts is embedded in the coaching prompt. No business tool is registered. There is no saved-progress or external-action mode. New integrations require implementation and separate verification.
+The token route returns `{ token, uid, channel }`; stop accepts `{ agent_id }` and handles an already-stopping session idempotently. The selected lesson from lib/lessons.ts is embedded in the coaching prompt. Saved progress and its optional tool and webhook modes are described in [Saved progress and conversation logging](#saved-progress-and-conversation-logging). There is no other external-action mode. New integrations require implementation and separate verification.
 
 See [contributor guide](AGENTS.md) and [current capabilities](README.md#what-you-can-do) for contracts. Static checks, native startup, Docker startup and complete live speech/tool outcomes are separate evidence.
 
@@ -107,7 +107,7 @@ When asked to finish, give one strength, up to two improvements grounded in actu
 
 ### Capability boundary
 
-Feedback is based on recognized text, not acoustic analysis. Do not score or assess pronunciation, accent, fluency or certified proficiency, and do not infer a CEFR level. Do not invent learner utterances or treat lesson examples as actual history. Ask for repetition when recognition is unclear. Role-play is fictional and does not place orders, take payments, schedule meetings or save progress. Keep exercise details only in this conversation; do not infer real personal attributes from fictional practice. English guidance is the default unless immersion in the selected language is explicitly requested; a request for harder practice is not consent to immersion. Do not request legal names, addresses, payment details or secrets.
+Feedback is based on recognized text, not acoustic analysis. Do not score or assess pronunciation, accent, fluency or certified proficiency, and do not infer a CEFR level. Do not invent learner utterances or treat lesson examples as actual history. Ask for repetition when recognition is unclear. Role-play is fictional and does not place orders, take payments or schedule meetings. Saved progress is practice history only (lessons, dates, turn counts and recorded corrections); it is never a score or a proficiency level. Do not infer real personal attributes from fictional practice. English guidance is the default unless immersion in the selected language is explicitly requested; a request for harder practice is not consent to immersion. Do not request legal names, addresses, payment details or secrets.
 
 ### Source ownership
 
@@ -126,3 +126,54 @@ The Agent start/stop routes explicitly mint tokens with `ConvoAITokenBuilder.bui
 ## Lint dependency security compatibility
 
 The registry audit reports GHSA-g3hv-75wg-m249 in minimatch 10.2.6, including the latest typescript-estree 8.72.2 dependency range. A parent-scoped pnpm override selects minimatch 11.0.1 only for `@typescript-eslint/typescript-estree>minimatch`; it does not replace unrelated consumers. Node.js 24 satisfies its runtime requirement, and the caller uses the retained CommonJS `minimatch` function with `dot: true`. Recheck and remove this compatibility override when the upstream dependency range includes a patched version. Run the complete verification suite and an official-registry audit after lockfile updates.
+
+## Saved progress and conversation logging
+
+### Data model and adapters
+
+`lib/progress/types.ts` defines one document per learner: `languages` (per lesson: started, last practiced, session count, completed at/by), `sessions` (last 50), `corrections` (last 30, tool mode only), `agents` (started agents, logging only) and `conversations` (logging only). The `ProgressStore` contract is `get`, `put`, `delete`, `findByCode`, `linkAgent` and `findByAgent`; `put` replaces the document, last write wins.
+
+`PROGRESS_STORE` selects the adapter in `lib/progress/store.ts`:
+
+| Value | Adapter | Persists on | Verified by |
+|---|---|---|---|
+| `file` (default) | One JSON file in `PROGRESS_DATA_DIR` (default `.scenario-data`), atomic writes, mode 600 | Local disk, a Docker volume mounted at `/app/.scenario-data` | Contract checks and local runs |
+| `sqlite` | `node:sqlite` database file in the same directory (no native dependency) | Same as `file` | Contract checks and local runs |
+| `postgres` | `DATABASE_URL` connection string for Neon or Supabase, `postgres` driver loaded only when selected, tables created on first use | Hosted database; required on serverless hosts such as Vercel | Not run against a live database |
+
+An unknown store or a missing `DATABASE_URL` fails with a clear error. A store failure never blocks a session: the invite route starts the coach without history or tools, and the progress API answers 503.
+
+### Identity
+
+A random learner id is created with the first save or session start and kept in an httpOnly, SameSite=Lax cookie (Secure in production builds, so plain-HTTP access works only on `localhost`). Each learner also has a 10-character code from a 30-character alphabet (about 49 bits). Entering it on another device switches that browser to the same learner; redeeming is rate limited per client address in memory, per server process. Both the cookie and the code are bearer secrets. No name or contact detail is collected. `DELETE /api/progress` removes the learner's document and agent links.
+
+### Completion modes
+
+- **Browser mode** (`COACH_PUBLIC_BASE_URL` unset): the page reports each finished session (idempotent by session id) and the learner marks the lesson complete on the ended screen. The UI updates optimistically from `lib/progress/client.ts`, caches the last view in `localStorage` (never the code) and shows an inline retry when a save fails.
+- **Coach tool mode** (`COACH_PUBLIC_BASE_URL` set): the invite route enables tools and registers two Agora inline REST tools, `record_correction` and `record_objective_result`. Agora's cloud calls `POST /api/progress/coach` with a per-session bearer token: an HMAC-SHA256 token bound to learner, language, lesson and a 15-minute expiry, keyed from the App Certificate. The body never selects the learner or lesson.
+
+### Prompt history
+
+At session start `getLearnerHistory` adds a short factual section for the selected language: lessons marked complete, lessons practiced, the last finished session, the status of today's lesson, up to three recorded corrections and, when a conversation was logged, up to three of the learner's final turns from it. Without saved practice the prompt says so and forbids inventing history. Identifiers never enter the prompt.
+
+### Conversation logging through Agora's webhook
+
+Stored conversation text comes from Agora's servers, not from the browser. The live transcript in the UI still uses real-time messages and is display only.
+
+```text
+invite (logging on) -> agent starts -> link agent id to learner and lesson
+session ends -> Agora POSTs eventType 103 to /api/agora-webhook
+  -> verify Agora-Signature-V2 -> find learner by agent id -> store turns -> 200
+```
+
+- **Enabled** only when `COACH_PUBLIC_BASE_URL` and `AGORA_WEBHOOK_SECRET` are both set; otherwise the route answers 404 and no agent link is saved.
+- **Signature**: HMAC-SHA256 of the raw request body with the webhook secret, hex, compared in constant time against the `Agora-Signature-V2` header. Unsigned or mismatched requests get 401.
+- **Events**: only `eventType` 103 (agent history) is stored. Other events are acknowledged with 200 and ignored.
+- **Idempotency**: one conversation per agent id; a retried or replayed event answers `duplicate` and changes nothing. A store failure answers 503 so the event can be delivered again.
+- **Content limits**: Agora sends the agent's stored dialogue, capped by `llm.max_history` (set to 100 here), so the earliest turns of a very long session can be missing. The app keeps at most 200 turns of 2,000 characters per conversation and marks cut records as truncated.
+- **Retention**: the newest 20 conversations per learner, none older than 90 days (pruned on write). Reset deletes them.
+- **Privacy**: recognized speech can contain anything a learner says. Conversation text never goes to the browser view or server logs. Audio is never stored. Provider-side retention at Agora and the speech and model vendors is outside this source.
+
+What was verified against Agora's documentation: the notification envelope (`noticeId`, `productId`, `eventType`, `notifyMs`, `payload`), the `Agora-Signature` (HMAC-SHA1) and `Agora-Signature-V2` (HMAC-SHA256) headers, the 103 payload (`agent_id`, `start_ts`, `stop_ts`, `contents[]` of `role` and `content`, optional `labels`), the `max_history` cap, the 10-second response expectation and that retries can happen. Not verified: a live delivery (no public URL was available), the exact retry schedule, whether the Console health check is signed, and that the CLI event key `agent-memory` is the 103 event. Sources: [Handle webhook](https://docs.agora.io/en/ai/build/handle-runtime-events/webhooks), [Notification event types](https://docs.agora.io/en/ai/reference/event-types), [Retrieve conversation history](https://docs.agora.io/en/ai/build/handle-runtime-events/retrieve-session-history).
+
+These endpoints are sample-grade: no accounts, in-memory rate limits and last-write-wins documents. They are not production authentication or abuse controls.

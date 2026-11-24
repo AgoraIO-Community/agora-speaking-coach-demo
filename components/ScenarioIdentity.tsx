@@ -3,17 +3,19 @@
 import Image from 'next/image';
 import { useEffect, useRef } from 'react';
 import { Button } from './ui/button';
-import type { PracticeLanguage } from '@/lib/lessons';
+import type { LessonId, PracticeLanguage } from '@/lib/lessons';
 import { LessonGuide } from './LessonPreview';
 import type { ScenarioPresentation } from '@/lib/presentation';
 
 export function ScenarioIdentity({
   scenario,
   language,
+  lessonId,
   onBuild,
 }: {
   scenario: ScenarioPresentation;
   language: PracticeLanguage;
+  lessonId: LessonId;
   onBuild: React.MouseEventHandler<HTMLButtonElement>;
 }) {
   const headerRef = useRef<HTMLElement>(null);
@@ -61,7 +63,7 @@ export function ScenarioIdentity({
         </div>
       </div>
       <nav className="demo-header-actions" aria-label="Practice and build">
-        <LessonGuide language={language} />
+        <LessonGuide language={language} lessonId={lessonId} />
         <Button size="sm" className="demo-header-cta" onClick={onBuild}>
           Build Now
         </Button>

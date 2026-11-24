@@ -15,7 +15,15 @@ import type {
   AgentResponse,
   AgoraRenewalTokens,
 } from '../types/conversation';
-import { DEFAULT_PRACTICE_LANGUAGE, type PracticeLanguage } from '@/lib/lessons';
+import {
+  DEFAULT_LESSON_ID,
+  DEFAULT_PRACTICE_LANGUAGE,
+  getLesson,
+  getPracticeLanguage,
+  type LessonId,
+  type PracticeLanguage,
+} from '@/lib/lessons';
+import { LessonMaterial } from './LessonPreview';
 import { getScenarioPresentation } from '@/lib/presentation';
 import type { AgentSignalSnapshot } from '@/lib/agent-signal';
 import { EMPTY_INSPECTION, type InspectionSnapshot } from '@/lib/inspection';
@@ -74,6 +82,7 @@ const SESSION_LIMIT_MS = 10 * 60 * 1000;
 export default function LandingPage() {
   const scenario = getScenarioPresentation();
   const [language, setLanguage] = useState<PracticeLanguage>(DEFAULT_PRACTICE_LANGUAGE);
+  const [lessonId, setLessonId] = useState<LessonId>(DEFAULT_LESSON_ID);
   const [showConversation, setShowConversation] = useState(false);
   const [activity, setActivity] = useState<AgentSignalSnapshot>({
     state: 'idle',
@@ -157,6 +166,7 @@ export default function LandingPage() {
             requester_id: responseData.uid,
             channel_name: responseData.channel,
             practice_language: language,
+            lesson_id: lessonId,
           } as ClientStartRequest),
         })
           .then(async (res) => {
@@ -345,6 +355,7 @@ export default function LandingPage() {
         <ScenarioIdentity
           scenario={scenario}
           language={language}
+          lessonId={lessonId}
           onBuild={openBuild}
         />
       <ConversationWorkspace
@@ -368,6 +379,27 @@ export default function LandingPage() {
                 )}
               </div>
             </div>
+            <section className="demo-session-summary" aria-label="Practice summary">
+              <h3>Practice summary</h3>
+              <dl>
+                <div>
+                  <dt>Language</dt>
+                  <dd>{getPracticeLanguage(language).name}</dd>
+                </div>
+                <div>
+                  <dt>Lesson</dt>
+                  <dd>{getLesson(language, lessonId).title}</dd>
+                </div>
+                <div>
+                  <dt>Your turns</dt>
+                  <dd>{inspection.messages.filter((message) => message.role === 'user').length}</dd>
+                </div>
+              </dl>
+              <LessonMaterial language={language} lessonId={lessonId} sections={['vocabulary']} />
+              <p className="demo-note">
+                This summary lists the lesson you practiced and counts your turns in the transcript below. It does not score or grade you; your coach’s spoken recap, if you asked for one, is in the transcript. Nothing here is saved: it disappears when you reload or start another practice.
+              </p>
+            </section>
             <ConversationPanel
               id="last-session-transcript"
               name={scenario.name}
@@ -388,6 +420,8 @@ export default function LandingPage() {
             error={error}
             language={language}
             onLanguageChange={setLanguage}
+            lessonId={lessonId}
+            onLessonChange={setLessonId}
             onStart={handleStartConversation}
           />
         ) : agoraData && rtmClient ? (

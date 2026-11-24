@@ -2,7 +2,7 @@
 
 ## First-version scope
 
-Practice Spanish, French or German with English instructions, explanations and feedback. Ask explicitly for immersion in the selected language.
+Practice Spanish, French, German, Portuguese, Japanese or Korean with English instructions, explanations and feedback. Ask explicitly for immersion in the selected language.
 
 Feedback is based on recognized text, not acoustic analysis. Do not score or assess pronunciation, accent, fluency or certified proficiency, and do not infer a CEFR level. Do not invent learner utterances or treat lesson examples as actual history. Ask for repetition when recognition is unclear. Role-play is fictional and does not place orders, schedule meetings or save progress. Keep exercise details only in this conversation; do not infer real personal attributes from fictional practice. English guidance is the default unless immersion in the selected language is explicitly requested; a request for harder practice is not consent to immersion. Do not request legal names, addresses, payment details or secrets.
 
@@ -51,7 +51,7 @@ Use Node.js 24 from .nvmrc and pnpm 9.15.9. Install with pnpm install --frozen-l
 
 ## multilingual coaching contract
 
-Use lib/lessons.ts for shared phrase cards and prompt material. Keep beginner/intermediate/advanced adaptation, persistent English guidance unless immersion is explicitly requested, one-question turns, at most one useful expression correction and a recap grounded in real learner turns. Example corrections are teaching fixtures, not learner history. Model standard expressions in the selected language without claiming acoustic evaluation. No tools or saved progress are provided. Topic tabs are reading aids; the learner states the topic aloud. Ask for a recap before ending. See [speech provider references](ARCHITECTURE.md#speech-configuration).
+Use lib/lessons.ts for shared phrase cards and prompt material. Each practice language is one pack in `PRACTICE_LANGUAGES`; the landing-page picker, phrasebook, prompt, greeting, voice and request validation derive from it, so add a language there rather than in components or routes. Keep beginner/intermediate/advanced adaptation, persistent English guidance unless immersion is explicitly requested, one-question turns, at most one useful expression correction and a recap grounded in real learner turns. Example corrections are teaching fixtures, not learner history. Model standard expressions in the selected language without claiming acoustic evaluation. No tools or saved progress are provided. Topic tabs are reading aids; the learner states the topic aloud. Ask for a recap before ending. See [speech provider references](ARCHITECTURE.md#speech-configuration).
 
 ## Prompt behavior contract — 2026-11-05
 
@@ -99,12 +99,12 @@ Local implementation does not authorize a commit. A commit does not authorize a 
 
 ## Usage FAQ contract
 
-Keep FAQ in the upper-right header beside Inspector and Build. `components/ScenarioFaq.tsx` and `styles/faq.css` follow the Voice Shopping drawer pattern: closed on entry, right-side on desktop, full-width on mobile, internally scrollable, and keyboard accessible. Opening FAQ must not start a session or request microphone access. Keep answers consistent with this scenario’s conversation-only scope. Preserve the coach Phrasebook where present.
+Keep Build Now as the single filled call to action at the upper-right of the header, with Phrasebook beside it. Keep FAQ and Inspector in the page footer (`components/ScenarioFooter.tsx`) beside the technology list; the footer renders on the landing, in-session and ended states. On the landing page keep the language picker and Start practice beside the conversation preview on wide screens and stacked on narrow ones. `components/ScenarioFaq.tsx` and `styles/faq.css` follow the Voice Shopping drawer pattern: closed on entry, right-side on desktop, full-width on mobile, internally scrollable, and keyboard accessible. Opening FAQ must not start a session or request microphone access. Keep answers consistent with this scenario’s conversation-only scope. Preserve the coach Phrasebook where present.
 
 
 ## Scenario update — 2026-11-18
 
-Practice Spanish, French or German with English instructions, explanations and feedback. Ask explicitly for immersion in the selected language. Follow the current workflow in `lib/agent-config.ts`. Existing repository, package, recipe and internal identifiers are retained for entry compatibility; they are not public scenario labels.
+Practice Spanish, French, German, Portuguese, Japanese or Korean with English instructions, explanations and feedback. Ask explicitly for immersion in the selected language. Follow the current workflow in `lib/agent-config.ts`. Existing repository, package, recipe and internal identifiers are retained for entry compatibility; they are not public scenario labels.
 
 ## Typography
 

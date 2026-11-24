@@ -15,7 +15,7 @@ const questions = [
   },
   {
     "question": "How do I start a conversation?",
-    "answer": "Select Spanish, French or German, choose Start practice and allow microphone access. Tell the coach your level and goal. You can mute or end the conversation with the voice controls."
+    "answer": "Select Spanish, French, German, Portuguese, Japanese or Korean, choose Start practice and allow microphone access. Tell the coach your level and goal. You can mute or end the conversation with the voice controls."
   },
   {
     "question": "What should I say?",

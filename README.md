@@ -2,7 +2,7 @@
 
 [English](README.md) | [简体中文](README.zh-CN.md) | [日本語](README.ja.md)
 
-Practice Spanish, French or German with English instructions, explanations and feedback. Ask explicitly for immersion in the selected language.
+Practice Spanish, French, German, Portuguese, Japanese or Korean with English instructions, explanations and feedback. Ask explicitly for immersion in the selected language.
 
 **[Try the live demo →](https://agora-speaking-coach-demo.vercel.app)**
 
@@ -100,7 +100,7 @@ The maintained Community demo uses GitHub Actions for production deployment afte
 
 ## How It Works
 
-1. Select Spanish, French or German, then choose **Start practice** and allow microphone access.
+1. Select Spanish, French, German, Portuguese, Japanese or Korean, then choose **Start practice** and allow microphone access.
 2. Try: “I am a beginner. Help me introduce myself in Spanish.”
 3. Use beginner, intermediate or advanced practice with English guidance.
 4. Receive vocabulary or grammar feedback based on recognized text.

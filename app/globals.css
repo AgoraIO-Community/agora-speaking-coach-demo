@@ -695,23 +695,36 @@ button:disabled {
   min-width: 0;
 }
 .demo-workspace-ready {
+  position: relative;
+  flex: 1;
   max-width: 1200px;
-  min-height: calc(100dvh - var(--demo-header-bottom, 94px));
-  grid-template-columns: minmax(0, 1fr) 280px;
-  align-content: center;
-  gap: 56px;
+  grid-template-columns: minmax(0, 1fr);
+  align-content: start;
+  gap: 0;
   text-align: left;
-  padding-block: 32px 48px;
+  padding-block: 24px 32px;
 }
+/* The idle signal sits beside the hero so the setup row keeps the full width. */
 .demo-workspace-ready .demo-sidebar {
-  grid-row: 1;
-  grid-column: 2;
-  width: 100%;
-  align-self: center;
+  position: absolute;
+  top: 24px;
+  right: 40px;
+  width: 240px;
+}
+.demo-workspace-ready .demo-signal-canvas {
+  height: 104px;
 }
 .demo-workspace-ready .demo-main-content {
-  grid-row: 1;
   grid-column: 1;
+}
+@media (min-width: 801px) {
+  .demo-workspace-ready .demo-welcome h2,
+  .demo-workspace-ready .demo-lead {
+    padding-right: 264px;
+  }
+  .demo-workspace-ready .demo-lead {
+    max-width: calc(54ch + 264px);
+  }
 }
 .demo-welcome h2 {
   font-size: 44px;
@@ -729,26 +742,109 @@ button:disabled {
 }
 .demo-practice-language {
   display: grid;
-  width: fit-content;
-  min-width: 160px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 8px;
+  width: 100%;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
 }
-.demo-practice-buttons {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
+.demo-practice-language legend {
+  margin-bottom: 10px;
+  padding: 0;
+  font-size: 14px;
+  line-height: 22px;
+  font-weight: 500;
 }
-.demo-welcome-actions {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-end;
-  gap: 12px;
-  justify-content: flex-start;
-  margin: 24px 0 10px;
+.demo-practice-language label {
+  position: relative;
+  display: grid;
+  gap: 2px;
+  min-height: 60px;
+  align-content: center;
+  padding: 10px 14px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--card);
+  cursor: pointer;
+  overflow-wrap: anywhere;
 }
-.demo-welcome > [role='alert'] {
-  margin-top: 20px;
+.demo-practice-language input {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  opacity: 0;
+  cursor: inherit;
+}
+.demo-practice-language strong {
+  font-size: 16px;
+  line-height: 24px;
+  font-weight: 500;
+}
+.demo-practice-language span {
+  color: var(--muted-foreground);
+  font-size: 12px;
+  line-height: 18px;
+}
+.demo-practice-language label:has(input:checked) {
+  border-color: var(--foreground);
+  box-shadow: inset 0 0 0 1px var(--foreground);
+}
+.demo-practice-language label:has(input:focus-visible) {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+.demo-practice-language:disabled label {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+@media (max-width: 480px) {
+  .demo-practice-language {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+/* Language choice and conversation preview sit side by side on wide screens. */
+.demo-setup {
+  display: grid;
+  gap: 32px;
+  margin-top: 28px;
+}
+.demo-setup-start {
+  display: grid;
+  gap: 20px;
+  justify-items: start;
+  min-width: 0;
+  max-width: 532px;
+}
+.demo-setup-start > [role='alert'] {
+  width: 100%;
   text-align: left;
+}
+.demo-setup .spanish-lessons {
+  margin-top: 0;
+}
+.demo-setup .spanish-lessons h3 {
+  font-size: 14px;
+  line-height: 22px;
+  font-weight: 500;
+}
+.demo-setup .spanish-phrases {
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+.demo-setup .spanish-phrases li {
+  padding: 0.625rem 0.875rem;
+}
+.demo-setup .spanish-phrases strong {
+  font-size: 1rem;
+}
+@media (min-width: 1024px) {
+  .demo-setup {
+    grid-template-columns: minmax(0, 532px) minmax(0, 1fr);
+    align-items: start;
+    gap: 56px;
+  }
 }
 .demo-note {
   color: var(--muted-foreground);
@@ -820,12 +916,15 @@ button:disabled {
   }
 
   .demo-header-actions {
-    gap: 0;
+    gap: 8px;
   }
   .demo-header-actions .ag-button {
     padding: 0 4px;
     font-size: 11px;
     height: 32px;
+  }
+  .demo-header-actions .demo-header-cta {
+    padding: 0 12px;
   }
   .demo-workspace {
     padding: 24px 20px;
@@ -908,44 +1007,6 @@ button:disabled {
   }
 }
 
-.demo-features {
-  margin-top: 24px;
-}
-.demo-features h3 {
-  font-size: 13px;
-  line-height: 22px;
-  font-weight: 500;
-  margin-bottom: 12px;
-}
-.demo-feature-comparison {
-  padding: 1px 7px;
-  border-radius: 4px;
-  color: var(--ring);
-  background: color-mix(in srgb, var(--ring) 12%, transparent);
-  font-size: 10px;
-  line-height: 18px;
-  font-weight: 400;
-}
-.demo-features ul {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px 24px;
-  list-style: none;
-  padding: 0;
-}
-.demo-features li {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 13px;
-  line-height: 22px;
-  font-weight: 500;
-}
-.demo-feature-emoji {
-  flex: none;
-  font-size: 16px;
-  line-height: 20px;
-}
 .demo-built-with {
   display: flex;
   flex-wrap: wrap;
@@ -974,36 +1035,34 @@ button:disabled {
   font-size: 11px;
   line-height: 20px;
 }
-.demo-lesson-dialog .demo-features {
+.demo-footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 24px;
+  padding: 14px 40px;
+  border-top: 1px solid var(--border);
+}
+.demo-footer .demo-built-with {
   margin-top: 0;
 }
-.demo-lesson-dialog .demo-built-with {
-  margin-top: 0;
+.demo-footer-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
 }
 @media (max-width: 800px) {
   .demo-workspace-ready {
     align-content: start;
   }
-  .demo-features {
-    margin-top: 20px;
-  }
-  .demo-features li {
-    font-size: 13px;
-    line-height: 22px;
-  }
-  .demo-features ul {
-    display: grid;
-    gap: 12px;
-  }
-  .demo-features h3 {
-    margin-bottom: 10px;
-  }
   .demo-built-with {
-    align-items: flex-start;
-    flex-direction: column;
-    margin-top: 16px;
     font-size: 11px;
     line-height: 20px;
+  }
+  .demo-footer {
+    padding: 14px 20px;
   }
   .demo-built-with li {
     padding: 1px 7px;

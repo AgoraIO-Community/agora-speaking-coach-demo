@@ -5,6 +5,7 @@ import dynamic from 'next/dynamic';
 import { ScenarioIdentity } from './ScenarioIdentity';
 import { Dialog } from './ui/dialog';
 import { ScenarioFaq } from './ScenarioFaq';
+import { ScenarioFooter } from './ScenarioFooter';
 import { Alert, AlertDescription } from './ui/alert';
 import { Button } from './ui/button';
 import type { RTMClient } from 'agora-rtm';
@@ -344,10 +345,8 @@ export default function LandingPage() {
         <ScenarioIdentity
           scenario={scenario}
           language={language}
-          onInspect={() => setInspectorOpen(true)}
+          onBuild={openBuild}
         />
-        <ScenarioFaq />
-      </Dialog>
       <ConversationWorkspace
         scenario={scenario}
         activity={
@@ -390,7 +389,6 @@ export default function LandingPage() {
             language={language}
             onLanguageChange={setLanguage}
             onStart={handleStartConversation}
-            onBuild={openBuild}
           />
         ) : agoraData && rtmClient ? (
           <Suspense fallback={<LoadingSkeleton />}>
@@ -462,6 +460,12 @@ export default function LandingPage() {
           </p>
         )}
       </ConversationWorkspace>
+        <ScenarioFooter
+          scenario={scenario}
+          onInspect={() => setInspectorOpen(true)}
+        />
+        <ScenarioFaq />
+      </Dialog>
       <ScenarioInspector
         scenario={scenario}
         snapshot={inspection}

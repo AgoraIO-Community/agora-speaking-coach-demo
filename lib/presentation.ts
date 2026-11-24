@@ -4,22 +4,7 @@ export const presentation: ScenarioPresentation = {
   id: '06-speaking-coach',
   name: 'Multilingual Speaking Coach',
   purpose: "Language practice with English guidance",
-  summary: 'Practice Spanish, French or German with English guidance. Ask for immersion when you’re ready.',
-  featuresHeading: 'Practice with your coach',
-  features: [
-    {
-      emoji: '💬',
-      title: 'Short phrases with English meaning',
-    },
-    {
-      emoji: '📖',
-      title: 'Phrasebook with English meanings',
-    },
-    {
-      emoji: '🌱',
-      title: 'English feedback & session recap',
-    },
-  ],
+  summary: 'Practice Spanish, French, German, Portuguese, Japanese or Korean with English guidance. Ask for immersion when you’re ready.',
   builtWith: ['Agora Conversational AI', 'Agents SDK', 'Next.js'],
   startLabel: 'Start practice',
   boundaryShort: 'Conversation-based coaching. No pronunciation scores or saved learning progress.',

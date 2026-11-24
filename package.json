@@ -1,7 +1,7 @@
 {
   "name": "agora-speaking-coach-demo",
   "version": "0.1.3",
-  "description": "Practice Spanish, French or German with English guidance. Ask for immersion when you want it.",
+  "description": "Practice Spanish, French, German, Portuguese, Japanese or Korean with English guidance. Ask for immersion when you want it.",
   "private": true,
   "engines": {
     "node": "24.x"

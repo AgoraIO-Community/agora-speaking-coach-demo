@@ -50,10 +50,10 @@ async function main() {
     }
     const unsupported = await POST(new NextRequest('http://localhost/api/invite-agent', {
       method: 'POST',
-      body: JSON.stringify({ requester_id: 'voice-user', channel_name: 'voice-only-channel', practice_language: 'ja' }),
+      body: JSON.stringify({ requester_id: 'voice-user', channel_name: 'voice-only-channel', practice_language: 'zz' }),
     }));
     assert.equal(unsupported.status, 400);
-    assert.equal(starts, 4);
+    assert.equal(starts, PRACTICE_LANGUAGES.length + 1);
   } finally {
     Agent.prototype.createSession = originalCreate;
     if (originalOrigin === undefined) delete process.env.TOP_TEN_SCENARIO_TOOL_BASE_URL;

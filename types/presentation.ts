@@ -3,8 +3,6 @@ export interface ScenarioPresentation {
   name: string;
   purpose: string;
   summary: string;
-  featuresHeading: string;
-  features: { emoji: string; title: string }[];
   builtWith: string[];
   startLabel: string;
   boundaryShort: string;

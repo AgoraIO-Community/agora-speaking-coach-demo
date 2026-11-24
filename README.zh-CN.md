@@ -2,7 +2,7 @@
 
 [English](README.md) | [简体中文](README.zh-CN.md) | [日本語](README.ja.md)
 
-本文仅翻译文档；应用界面使用英语。支持西班牙语、法语和德语，默认用英语引导。
+本文仅翻译文档；应用界面使用英语。支持西班牙语、法语、德语、葡萄牙语、日语和韩语，默认用英语引导。
 
 以英语提供引导和反馈，用所选语言练习自我介绍、点餐和职场交流。
 
@@ -87,7 +87,7 @@ pnpm run doctor
 pnpm run dev
 ```
 
-打开 [http://localhost:3000](http://localhost:3000)，选择西班牙语、法语或德语，再点击 **Start practice** 并允许使用麦克风。需要时可请助手总结对话，点击挂断按钮（**End conversation**）结束。
+打开 [http://localhost:3000](http://localhost:3000)，选择西班牙语、法语、德语、葡萄牙语、日语或韩语，再点击 **Start practice** 并允许使用麦克风。需要时可请助手总结对话，点击挂断按钮（**End conversation**）结束。
 
 每次会话满 10 分钟自动结束，点击 Start again 可重新开始。
 
@@ -109,7 +109,7 @@ Community 官方演示站通过 GitHub Actions 在验证通过后部署生产环
 
 ## 使用流程
 
-1. 选择西班牙语、法语或德语，再点击 **Start practice** 并允许麦克风访问。
+1. 选择西班牙语、法语、德语、葡萄牙语、日语或韩语，再点击 **Start practice** 并允许麦克风访问。
 2. 试说：“I am a beginner. Help me introduce myself in Spanish.”
 3. 练习西语自我介绍、点餐和职场对话。
 4. 基于转写文本纠正词汇和语法；不评分发音或保存进度。

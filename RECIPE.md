@@ -2,11 +2,11 @@
 
 ## 1. Overview
 
-Practice Spanish, French, German, Portuguese, Japanese or Korean with English instructions, explanations and feedback. Ask explicitly for immersion in the selected language. Feedback is based on recognized text, not acoustic analysis. Do not score or assess pronunciation, accent, fluency or certified proficiency, and do not infer a CEFR level. Do not invent learner utterances or treat lesson examples as actual history. Ask for repetition when recognition is unclear. Role-play is fictional and does not place orders, schedule meetings or save progress. Keep exercise details only in this conversation; do not infer real personal attributes from fictional practice. English guidance is the default unless immersion in the selected language is explicitly requested; a request for harder practice is not consent to immersion. Do not request legal names, addresses, payment details or secrets.
+Practice Spanish, French, German, Portuguese, Japanese or Korean with English instructions, explanations and feedback. Choose a lesson from a beginner curriculum of can-do objectives; the coach teaches the selected lesson. Ask explicitly for immersion in the selected language. Feedback is based on recognized text, not acoustic analysis. Do not score or assess pronunciation, accent, fluency or certified proficiency, and do not infer a CEFR level. Do not invent learner utterances or treat lesson examples as actual history. Ask for repetition when recognition is unclear. Role-play is fictional and does not place orders, take payments, schedule meetings or save progress. Keep exercise details only in this conversation; do not infer real personal attributes from fictional practice. English guidance is the default unless immersion in the selected language is explicitly requested; a request for harder practice is not consent to immersion. Do not request legal names, addresses, payment details or secrets.
 
 ## 2. Try the Demo
 
-Use [local setup](https://github.com/AgoraIO-Community/agora-speaking-coach-demo/blob/main/README.md#run-it). Select a practice language and choose `Start practice`, allow microphone access and try: “I am a beginner. Help me introduce myself in Spanish.” Ask for a verbal recap before ending. Each session ends after ten minutes. No real outbound phone call is placed.
+Use [local setup](https://github.com/AgoraIO-Community/agora-speaking-coach-demo/blob/main/README.md#run-it). Select a practice language and a lesson, choose `Start practice`, allow microphone access and try: “Yes, I’m ready. Please go slowly.” Ask for a verbal recap before ending; the ended screen then shows an unsaved practice summary. Each session ends after ten minutes. No real outbound phone call is placed.
 
 ## 3. Architecture & Tech Stack
 
@@ -32,7 +32,7 @@ The start action fetches a combined RTC/RTM token and invites the Agent using re
 
 ## 7. Customize for Your Business
 
-Edit `lib/agent-config.ts` for the role, workflow and guardrails, `lib/lessons.ts` for teaching examples, `lib/presentation.ts` for public identity, and `components/ScenarioFaq.tsx` for usage answers. `lib/runtime-profile.ts` owns model and voice defaults. Existing repository, npm package and Recipe identifiers remain stable.
+Edit `lib/agent-config.ts` for the role, workflow and guardrails, `lib/curriculum/` (registered in `lib/lessons.ts`) for the curriculum: the shared lesson skeleton and one pack per language, `lib/presentation.ts` for public identity, and `components/ScenarioFaq.tsx` for usage answers. `lib/runtime-profile.ts` owns model and voice defaults. Existing repository, npm package and Recipe identifiers remain stable.
 
 ## 8. Deployment & Validation
 

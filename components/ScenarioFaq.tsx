@@ -15,23 +15,23 @@ const questions = [
   },
   {
     "question": "How do I start a conversation?",
-    "answer": "Select Spanish, French, German, Portuguese, Japanese or Korean, choose Start practice and allow microphone access. Tell the coach your level and goal. You can mute or end the conversation with the voice controls."
+    "answer": "Select Spanish, French, German, Portuguese, Japanese or Korean, pick a lesson, choose Start practice and allow microphone access. The coach teaches the lesson you picked. You can mute or end the conversation with the voice controls."
   },
   {
     "question": "What should I say?",
-    "answer": "I am a beginner. Help me introduce myself in Spanish."
+    "answer": "Yes, I’m ready. Please go slowly."
   },
   {
-    "question": "Can I try immersion or switch languages?",
-    "answer": "Ask for immersion in the selected language. Say “English, please” to restore English guidance. Start a new practice to select a different language."
+    "question": "Can I try immersion or switch languages or lessons?",
+    "answer": "Ask for immersion in the selected language. Say “English, please” to restore English guidance. Start a new practice to select a different language or lesson."
   },
   {
     "question": "How do I use the Phrasebook?",
-    "answer": "Open Phrasebook for expressions in your selected language and their English meanings. Tabs are reading aids; tell the coach by voice to change topic or difficulty."
+    "answer": "Open Phrasebook for the selected lesson’s vocabulary, usage point and model dialogue with English meanings. Japanese and Korean include a romanized reading aid. Ask the coach by voice to simplify or increase difficulty."
   },
   {
     "question": "Can it grade my pronunciation or save progress?",
-    "answer": "Feedback uses recognized text, not acoustic analysis. The coach helps with vocabulary and grammar but cannot score pronunciation, certify a CEFR level or save learning progress."
+    "answer": "Feedback uses recognized text, not acoustic analysis. The coach helps with vocabulary and grammar but cannot score pronunciation, certify a CEFR level or save learning progress. The practice summary after a session lists the lesson and counts your turns; it is not a grade and is not saved."
   },
   {
     "question": "Can I change what I said?",

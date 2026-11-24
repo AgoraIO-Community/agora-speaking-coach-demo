@@ -16,6 +16,8 @@ export type PromptContext = {
   history?: string | null;
   /** True when the coach can record corrections and the objective result through tools. */
   tools?: boolean;
+  /** True when the server stores this conversation's text after the call (webhook logging). */
+  logging?: boolean;
 };
 
 export function getScenarioConfig(
@@ -88,6 +90,9 @@ export function getScenarioPrompt(
           'If a tool call fails, continue the lesson and do not say that anything was saved.',
         ].join('\n')
       : 'You have no tools and cannot save or look up anything yourself. The page saves the session when the call ends, and the learner can mark the lesson complete there. Do not say that you saved, recorded or completed anything.',
+    context.logging
+      ? 'The text of this conversation is saved to the learner\'s practice history after the call. If asked, say so plainly, and that audio is not saved by this app and that they can delete saved progress on the page.'
+      : 'The text of this conversation is not stored by this app after the call. If asked, say so plainly.',
     '# Safety and truthfulness rules', config.guardrails,
     '# Scope boundary', PROGRESS_BOUNDARY,
     'No pronunciation assessment is available.',

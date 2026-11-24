@@ -30,6 +30,8 @@ export function createLearner(now = new Date()): LearnerRecord {
     languages: {},
     sessions: [],
     corrections: [],
+    agents: [],
+    conversations: [],
   };
 }
 
@@ -140,15 +142,28 @@ export function applyCorrection(
   return true;
 }
 
-export function toView(record: LearnerRecord | null, mode: ProgressView['mode']): ProgressView {
+export function toView(record: LearnerRecord | null, mode: ProgressView['mode'], logging = false): ProgressView {
   return {
     mode,
+    logging,
+    conversations: (record?.conversations ?? []).map(({ language, lessonId, endedAt, turns }) => ({
+      language, lessonId, endedAt, turns: turns.length,
+    })),
     saved: record !== null,
     code: record ? formatCode(record.code) : null,
     lastLanguage: record?.lastLanguage ?? null,
     languages: record?.languages ?? {},
     corrections: record?.corrections.slice(-5) ?? [],
   };
+}
+
+/** Up to three of the learner's final turns from the most recent logged conversation in this language. */
+function lastConversationLines(record: LearnerRecord, language: PracticeLanguage): string[] {
+  const conversation = (record.conversations ?? []).filter((item) => item.language === language).at(-1);
+  const said = conversation?.turns.filter((turn) => turn.role === 'user').slice(-3).map((turn) => JSON.stringify(turn.content.slice(0, 160)));
+  return conversation && said?.length
+    ? [`From the last logged conversation (${conversation.endedAt.slice(0, 10)}, lesson "${getLesson(language, conversation.lessonId as LessonId).title}"), the learner's final turns as recognized were: ${said.join('; ')}.`]
+    : [];
 }
 
 /** Short, factual history for the prompt. Null when nothing was saved for this language. */
@@ -172,6 +187,7 @@ export function getLearnerHistory(record: LearnerRecord | null, language: Practi
         : current?.sessions ? `practiced ${current.sessions} time(s) before, not marked complete`
         : current ? 'started before, with no finished session on record' : 'not practiced before'
     }.`,
+    ...lastConversationLines(record, language),
     ...corrections.map((correction) =>
       `Earlier recorded correction: learner said ${JSON.stringify(correction.learnerPhrase)}; suggested ${JSON.stringify(correction.alternative)}${correction.note ? ` (${correction.note})` : ''}.`),
   ];
@@ -184,16 +200,16 @@ export function getLearnerHistory(record: LearnerRecord | null, language: Practi
  * Public base URL Agora's cloud can reach (a hosted deployment or a tunnel
  * such as ngrok). Unset means browser-reported progress and no tools.
  */
-export function getCoachToolBaseUrl(env: NodeJS.ProcessEnv = process.env): string | null {
-  const raw = env.COACH_TOOL_BASE_URL?.trim();
+export function getPublicBaseUrl(env: NodeJS.ProcessEnv = process.env): string | null {
+  const raw = env.COACH_PUBLIC_BASE_URL?.trim();
   if (!raw) return null;
   let url: URL;
   try {
     url = new URL(raw);
   } catch {
-    throw new Error('COACH_TOOL_BASE_URL must be a full URL such as https://example.ngrok.app');
+    throw new Error('COACH_PUBLIC_BASE_URL must be a full URL such as https://example.ngrok.app');
   }
-  if (url.protocol !== 'https:' && url.protocol !== 'http:') throw new Error('COACH_TOOL_BASE_URL must use http or https');
+  if (url.protocol !== 'https:' && url.protocol !== 'http:') throw new Error('COACH_PUBLIC_BASE_URL must use http or https');
   return url.origin + url.pathname.replace(/\/+$/, '');
 }
 

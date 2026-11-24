@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { clientKey } from '@/lib/progress/http';
-import { applyCompletion, applyCorrection, createRateLimiter, getCoachToolBaseUrl, verifyToolToken } from '@/lib/progress/service';
+import { applyCompletion, applyCorrection, createRateLimiter, getPublicBaseUrl, verifyToolToken } from '@/lib/progress/service';
 import { getProgressStore } from '@/lib/progress/store';
 
 const allow = createRateLimiter(120, 10 * 60 * 1000);
@@ -11,12 +11,12 @@ const result = (ok: boolean, message: string, status = 200) =>
 
 /**
  * Coach tool endpoint, called by Agora's cloud during a session when
- * COACH_TOOL_BASE_URL is set. It is publicly reachable, so every call must
+ * COACH_PUBLIC_BASE_URL is set. It is publicly reachable, so every call must
  * carry the per-session token minted at session start; the token decides
  * which learner and lesson are written, never the request body.
  */
 export async function POST(request: NextRequest) {
-  if (!getCoachToolBaseUrl()) return result(false, 'Coach tools are not enabled.', 404);
+  if (!getPublicBaseUrl()) return result(false, 'Coach tools are not enabled.', 404);
   if (!allow(clientKey(request))) return result(false, 'Too many requests.', 429);
   const claims = verifyToolToken(request.headers.get('authorization')?.replace(/^Bearer\s+/i, ''));
   if (!claims) return result(false, 'Not authorized.', 401);

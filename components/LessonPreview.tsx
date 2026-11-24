@@ -174,7 +174,9 @@ export function LessonChooser({
         <LessonMaterial language={language} lessonId={lessonId} sections={['vocabulary', 'dialogue']} />
       </div>
       <p className="demo-note">
-        Your coach teaches the selected lesson. Lessons you practice are saved to your practice history; transcripts are not.
+        Your coach teaches the selected lesson. {progress.logging
+          ? 'Lessons you practice and the text of your conversations are saved to your practice history.'
+          : 'Lessons you practice are saved to your practice history; conversations are not logged.'}
       </p>
     </section>
   );

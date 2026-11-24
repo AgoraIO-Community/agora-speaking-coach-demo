@@ -13,14 +13,14 @@ async function main() {
   const config = getScenarioConfig();
   assert.equal(getScenarioPresentation().id, config.id);
   assert.deepEqual(getScenarioTools(), []);
-  // Without COACH_TOOL_BASE_URL the coach has no tools and the browser reports progress.
+  // Without COACH_PUBLIC_BASE_URL the coach has no tools and the browser reports progress.
   assert.match(getScenarioPrompt(), /You have no tools and cannot save or look up anything yourself/);
   const landing = fs.readFileSync('components/LandingPage.tsx', 'utf8');
   assert.doesNotMatch(landing, /api\/scenarios|shopping_session_id|event_session_id|followUpApi|useShopping|useFollowUps/);
 
   process.env.PROGRESS_STORE = 'file';
   process.env.PROGRESS_DATA_DIR = fs.mkdtempSync(path.join(os.tmpdir(), 'coach-conversation-check-'));
-  delete process.env.COACH_TOOL_BASE_URL;
+  delete process.env.COACH_PUBLIC_BASE_URL;
   process.env.NEXT_PUBLIC_AGORA_APP_ID = '0123456789abcdef0123456789abcdef';
   process.env.NEXT_AGORA_APP_CERTIFICATE = 'fedcba9876543210fedcba9876543210';
   const { POST } = await import('../app/api/invite-agent/route');

@@ -63,6 +63,12 @@ export function SavedProgress({ view, save, error }: { view: ProgressView; save:
             </DialogDescription>
           </DialogHeader>
 
+          <p className="demo-note">
+            {view.logging
+              ? `Conversation logging is on: the text of each finished conversation is saved with your progress (${view.conversations.length} stored, newest 20 kept for up to 90 days). Audio is never saved.`
+              : 'Conversation logging is off: conversations are not stored, only the practice history above.'}
+          </p>
+
           <section aria-labelledby="learner-code-heading">
             <h3 id="learner-code-heading">Your learner code</h3>
             {view.code ? (

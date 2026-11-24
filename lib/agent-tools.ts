@@ -4,7 +4,7 @@ import type { LlmTool } from 'agora-agents';
 export type CoachToolContext = { baseUrl: string; token: string };
 
 /**
- * Tools the coach may call. Without a context (COACH_TOOL_BASE_URL unset) the
+ * Tools the coach may call. Without a context (COACH_PUBLIC_BASE_URL unset) the
  * coach has no tools and the browser reports progress instead.
  *
  * These are Agora inline REST tools: Agora's cloud performs the HTTP request,

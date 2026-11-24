@@ -15,7 +15,8 @@ import { RUNTIME_PROFILE } from '@/lib/runtime-profile';
 import { getScenarioConfig, getScenarioPrompt } from '@/lib/agent-config';
 import { getScenarioTools } from '@/lib/agent-tools';
 import { learnerIdFrom, setLearnerCookie } from '@/lib/progress/http';
-import { applyStart, createLearner, getCoachToolBaseUrl, getLearnerHistory, loadLearner, signToolToken } from '@/lib/progress/service';
+import { applyStart, createLearner, getPublicBaseUrl, getLearnerHistory, loadLearner, signToolToken } from '@/lib/progress/service';
+import { applyAgentStart, getConversationLogging } from '@/lib/progress/conversations';
 import { getProgressStore } from '@/lib/progress/store';
 import type { LearnerRecord } from '@/lib/progress/types';
 
@@ -57,8 +58,8 @@ export async function POST(request: NextRequest) {
 
     // --- 1b. Saved progress ---
 
-    // A broken COACH_TOOL_BASE_URL is a configuration error and fails loudly.
-    const toolBaseUrl = getCoachToolBaseUrl();
+    // A broken COACH_PUBLIC_BASE_URL is a configuration error and fails loudly.
+    const toolBaseUrl = getPublicBaseUrl();
     // The progress store must never block a practice session: on failure the
     // coach simply starts without history and without tools.
     let learner: LearnerRecord | null = null;
@@ -82,7 +83,7 @@ export async function POST(request: NextRequest) {
           token: signToolToken({ learnerId: learner.id, language, lessonId, expiresAt: Date.now() + 15 * 60 * 1000 }),
         })
       : getScenarioTools();
-    const promptContext = { history, tools: scenarioTools.length > 0 };
+    const promptContext = { history, tools: scenarioTools.length > 0, logging: Boolean(learner && getConversationLogging()) };
 
     // --- 2. Build and start the agent ---
 
@@ -129,7 +130,7 @@ export async function POST(request: NextRequest) {
         },
       },
       // RTM is required for transcript events in the browser client.
-      // Tools are enabled only when COACH_TOOL_BASE_URL is set (coach tool mode).
+      // Tools are enabled only when COACH_PUBLIC_BASE_URL is set (coach tool mode).
       advancedFeatures: { enable_rtm: true, enable_tools: scenarioTools.length > 0 },
       // Required for browser RTM events:
       // - data_channel: 'rtm' enables RTM delivery path for state/metrics/errors
@@ -207,6 +208,20 @@ export async function POST(request: NextRequest) {
     });
 
     const agentId = await session.start();
+
+    // Conversation logging: remember which learner and lesson this agent
+    // belongs to, so the history webhook can be stored after the session.
+    // Nothing is linked when logging is not configured.
+    if (learner && getConversationLogging()) {
+      try {
+        const store = await getProgressStore();
+        applyAgentStart(learner, agentId, language, lessonId);
+        await store.put(learner);
+        await store.linkAgent(agentId, learner.id);
+      } catch (error) {
+        console.error('Conversation logging link failed:', error instanceof Error ? error.message : 'unknown error');
+      }
+    }
 
     const response = NextResponse.json({
       agent_id: agentId,

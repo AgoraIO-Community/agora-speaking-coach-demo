@@ -9,7 +9,7 @@ import { NextRequest } from 'next/server';
 // Keep saved-progress writes from these checks out of the repository.
 process.env.PROGRESS_STORE = 'file';
 process.env.PROGRESS_DATA_DIR = fs.mkdtempSync(path.join(os.tmpdir(), 'coach-api-check-'));
-delete process.env.COACH_TOOL_BASE_URL;
+delete process.env.COACH_PUBLIC_BASE_URL;
 
 function assert(condition: unknown, message: string): asserts condition {
   if (!condition) {

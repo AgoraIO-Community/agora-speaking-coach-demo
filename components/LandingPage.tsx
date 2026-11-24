@@ -442,7 +442,9 @@ export default function LandingPage() {
               <SaveStatus save={progress.save} error={progress.error} />
               <LessonMaterial language={language} lessonId={lessonId} sections={['vocabulary']} />
               <p className="demo-note">
-                This summary lists the lesson you practiced and counts your turns in the transcript below. It does not score or grade you; your coach’s spoken recap, if you asked for one, is in the transcript. The lesson, date and turn count are saved to your practice history{progress.view.mode === 'coach' ? ', along with corrections your coach recorded' : ''}. The transcript itself is not saved and disappears when you reload or start another practice.
+                This summary lists the lesson you practiced and counts your turns in the transcript below. It does not score or grade you; your coach’s spoken recap, if you asked for one, is in the transcript. The lesson, date and turn count are saved to your practice history{progress.view.mode === 'coach' ? ', along with corrections your coach recorded' : ''}. {progress.view.logging
+                  ? 'The text of this conversation is also saved on the server after the session; the transcript shown here is the live copy and disappears when you reload.'
+                  : 'The conversation itself is not logged: the transcript below disappears when you reload or start another practice.'}
               </p>
             </section>
             <ConversationPanel

@@ -35,4 +35,15 @@ for (const key of ['NEXT_PUBLIC_AGORA_APP_ID', 'NEXT_AGORA_APP_CERTIFICATE']) {
   }
 }
 
+// Saved progress and conversation logging status. Values are never printed.
+const has = (key) => new RegExp(`^${key}=.+$`, 'm').test(envContents);
+const store = envContents.match(/^PROGRESS_STORE=(.+)$/m)?.[1]?.trim() || 'file';
+console.log(`Progress store: ${store}${store === 'postgres' && !has('DATABASE_URL') ? ' (DATABASE_URL is missing)' : ''}`);
+console.log(has('COACH_PUBLIC_BASE_URL')
+  ? 'Coach tools: on (COACH_PUBLIC_BASE_URL is set; Agora must be able to reach it)'
+  : 'Coach tools: off (COACH_PUBLIC_BASE_URL not set); the browser reports progress');
+console.log(has('COACH_PUBLIC_BASE_URL') && has('AGORA_WEBHOOK_SECRET')
+  ? 'Conversation logging: configured. Check that the Agora project delivers "agent history" events to <COACH_PUBLIC_BASE_URL>/api/agora-webhook'
+  : 'Conversation logging: off (needs COACH_PUBLIC_BASE_URL and AGORA_WEBHOOK_SECRET). Conversations are not stored.');
+
 console.log('Doctor checks passed');

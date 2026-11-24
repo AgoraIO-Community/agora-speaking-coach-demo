@@ -9,15 +9,20 @@ import { Agent } from 'agora-agents';
 import { NextRequest } from 'next/server';
 import { getScenarioPrompt } from '../lib/agent-config';
 import { getScenarioTools } from '../lib/agent-tools';
+import {
+  applyAgentStart, applyConversation, describeConversationLogging, getConversationLogging, pruneConversations,
+  verifyWebhookSignature,
+} from '../lib/progress/conversations';
+import { createHmac } from 'node:crypto';
 import { createFileStore } from '../lib/progress/file-store';
 import {
   LEARNER_COOKIE, applyCompletion, applyCorrection, applySession, applyStart, createLearner, createRateLimiter,
-  findLearnerByCode, getCoachToolBaseUrl, getLearnerHistory, normalizeCode, parseSession, signToolToken, toView,
+  findLearnerByCode, getPublicBaseUrl, getLearnerHistory, normalizeCode, parseSession, signToolToken, toView,
   verifyToolToken,
 } from '../lib/progress/service';
 import { createSqliteStore } from '../lib/progress/sqlite-store';
 import { createProgressStore, resetProgressStore } from '../lib/progress/store';
-import { MAX_CORRECTIONS, MAX_SESSIONS, type ProgressStore } from '../lib/progress/types';
+import { MAX_CONVERSATIONS, MAX_CONVERSATION_TURNS, MAX_CORRECTIONS, MAX_SESSIONS, MAX_TURN_TEXT, type ProgressStore } from '../lib/progress/types';
 import { EMPTY_PROGRESS, getContinueTarget, getLessonState, withCompletion, withSession } from '../lib/progress/view';
 
 const temporary = (label: string) => fs.mkdtempSync(path.join(os.tmpdir(), `coach-progress-${label}-`));
@@ -49,8 +54,16 @@ async function storeContract(label: string, open: () => Promise<ProgressStore>) 
   await store.close?.();
   store = await open();
   assert.deepEqual(await store.get(first.id), first, `${label}: persists across reopen`);
+  // Agent links survive a reopen and resolve to the learner's current record.
+  assert.equal(await store.findByAgent('agent-contract-1'), null, `${label}: unknown agent`);
+  await store.linkAgent('agent-contract-1', first.id);
+  await store.linkAgent('agent-contract-2', second.id);
+  await store.linkAgent('agent-contract-1', first.id);
+  assert.deepEqual(await store.findByAgent('agent-contract-1'), first, `${label}: lookup by agent`);
   await store.delete(first.id);
   assert.equal(await store.get(first.id), null, `${label}: delete`);
+  assert.equal(await store.findByAgent('agent-contract-1'), null, `${label}: delete removes agent links`);
+  assert.deepEqual(await store.findByAgent('agent-contract-2'), second, `${label}: other links are untouched`);
   assert.equal(await store.findByCode(first.code), null, `${label}: delete removes the code`);
   await store.delete(first.id);
   await store.close?.();
@@ -130,7 +143,61 @@ function verifyRules() {
   assert.deepEqual([1, 2, 3, 4].map(() => allow('a', 0)), [true, true, true, false]);
   assert.equal(allow('b', 0), true, 'limits are per client');
   assert.equal(allow('a', 1001), true, 'the window resets');
-  console.log('Progress rules passed: codes, session idempotency, completion, caps, view and continue target.');
+  // Logged conversations: only for agents this learner started, stored once, capped and pruned.
+  const logged = createLearner();
+  const history = (agentId: string, contents: unknown, stop = 1_795_000_000) => ({ agent_id: agentId, start_ts: stop - 400, stop_ts: stop, contents });
+  const turns = [{ role: 'assistant', content: 'Hola. ¿Cómo te llamas?' }, { role: 'user', content: ' Me llamo Alex. ' }, { role: 'system', content: 'ignored' }, { role: 'user', content: '' }];
+  assert.equal(applyConversation(logged, history('agent-rule-0001', turns)), 'unknown-agent', 'agents the learner never started are refused');
+  assert.equal(applyConversation(logged, { agent_id: 'agent-rule-0001' }), 'invalid');
+  assert.equal(applyConversation(logged, null), 'invalid');
+  applyAgentStart(logged, 'agent-rule-0001', 'es', 'introduce-yourself');
+  assert.equal(applyConversation(logged, history('agent-rule-0001', turns), new Date(1_795_000_100_000)), 'stored');
+  assert.equal(applyConversation(logged, history('agent-rule-0001', [{ role: 'user', content: 'replayed' }])), 'duplicate', 'a replayed event changes nothing');
+  assert.deepEqual(logged.conversations[0].turns, [{ role: 'assistant', content: 'Hola. ¿Cómo te llamas?' }, { role: 'user', content: 'Me llamo Alex.' }]);
+  assert.equal(logged.conversations[0].lessonId, 'introduce-yourself');
+  assert.equal(logged.conversations[0].truncated, false);
+  assert.equal(logged.conversations[0].endedAt, new Date(1_795_000_000_000).toISOString());
+  applyAgentStart(logged, 'agent-rule-0002', 'es', 'order-a-meal');
+  const long = Array.from({ length: MAX_CONVERSATION_TURNS + 10 }, (_, index) => ({ role: index % 2 ? 'user' : 'assistant', content: `${index} ${'x'.repeat(MAX_TURN_TEXT + 50)}` }));
+  assert.equal(applyConversation(logged, history('agent-rule-0002', long), new Date(1_795_000_100_000)), 'stored');
+  assert.equal(logged.conversations[1].turns.length, MAX_CONVERSATION_TURNS);
+  assert.ok(logged.conversations[1].turns.every((turn) => turn.content.length <= MAX_TURN_TEXT));
+  assert.match(logged.conversations[1].turns.at(-1)!.content, new RegExp(`^${MAX_CONVERSATION_TURNS + 9} `), 'the most recent turns are kept');
+  assert.equal(logged.conversations[1].truncated, true);
+  // The browser sees metadata only; conversation text stays on the server.
+  const loggedView = toView(logged, 'browser', true);
+  assert.equal(loggedView.logging, true);
+  assert.deepEqual(loggedView.conversations[0], { language: 'es', lessonId: 'introduce-yourself', endedAt: logged.conversations[0].endedAt, turns: 2 });
+  assert.equal(JSON.stringify(loggedView).includes('Me llamo Alex'), false);
+  assert.match(getLearnerHistory({ ...logged, languages: { es: { lastLessonId: 'order-a-meal', lessons: {} } }, conversations: [logged.conversations[0]] }, 'es', 'order-a-meal')!,
+    /From the last logged conversation \(2026-11-\d\d, lesson "Introduce yourself"\), the learner's final turns as recognized were: "Me llamo Alex\."/);
+  // Retention: newest conversations only, nothing older than the day limit.
+  for (let index = 0; index < MAX_CONVERSATIONS + 3; index += 1) {
+    applyAgentStart(logged, `agent-many-${index}`, 'es', 'introduce-yourself');
+    applyConversation(logged, history(`agent-many-${index}`, turns, 1_795_000_000 + index), new Date(1_795_000_100_000));
+  }
+  assert.equal(logged.conversations.length, MAX_CONVERSATIONS);
+  pruneConversations(logged, new Date(1_795_000_000_000 + 91 * 24 * 60 * 60 * 1000));
+  assert.equal(logged.conversations.length, 0, 'conversations older than the retention window are dropped');
+
+  const secret = 'webhook-secret-for-checks';
+  const body = JSON.stringify({ noticeId: 'n1', eventType: 103, payload: {} });
+  const signature = createHmac('sha256', secret).update(body).digest('hex');
+  assert.equal(verifyWebhookSignature(body, signature, secret), true);
+  assert.equal(verifyWebhookSignature(body, signature.toUpperCase(), secret), true);
+  assert.equal(verifyWebhookSignature(`${body} `, signature, secret), false, 'the raw body is what is signed');
+  assert.equal(verifyWebhookSignature(body, signature, 'another-secret'), false);
+  for (const bad of [null, '', 'abc', createHmac('sha1', secret).update(body).digest('hex')]) assert.equal(verifyWebhookSignature(body, bad, secret), false);
+  const env = (values: Record<string, string>) => values as unknown as NodeJS.ProcessEnv;
+  assert.equal(getConversationLogging(env({})), null);
+  assert.equal(getConversationLogging(env({ COACH_PUBLIC_BASE_URL: 'https://abc.ngrok.app' })), null, 'a URL without the secret does not enable logging');
+  assert.equal(getConversationLogging(env({ AGORA_WEBHOOK_SECRET: secret })), null, 'a secret without the URL does not enable logging');
+  assert.deepEqual(getConversationLogging(env({ COACH_PUBLIC_BASE_URL: 'https://abc.ngrok.app/', AGORA_WEBHOOK_SECRET: secret })), { webhookUrl: 'https://abc.ngrok.app/api/agora-webhook', secret });
+  assert.match(describeConversationLogging(env({})), /off \(COACH_PUBLIC_BASE_URL and AGORA_WEBHOOK_SECRET not set\)\. Conversations are not stored/);
+  const described = describeConversationLogging(env({ COACH_PUBLIC_BASE_URL: 'https://abc.ngrok.app', AGORA_WEBHOOK_SECRET: secret }));
+  assert.match(described, /configured.*https:\/\/abc\.ngrok\.app\/api\/agora-webhook/);
+  assert.equal(described.includes(secret), false, 'the secret is never printed');
+  console.log('Progress rules passed: codes, session idempotency, completion, caps, view, continue target, conversation log and webhook signature.');
 }
 
 function verifyPromptAndTools() {
@@ -139,7 +206,9 @@ function verifyPromptAndTools() {
   assert.match(fresh, /do not invent earlier sessions/);
   assert.match(fresh, /You have no tools and cannot save or look up anything yourself/);
   assert.doesNotMatch(fresh, /record_correction|record_objective_result/);
-  assert.match(fresh, /Full transcripts and audio are not saved/);
+  assert.match(fresh, /Audio is never saved by this app/);
+  assert.match(fresh, /The text of this conversation is not stored by this app after the call/);
+  assert.match(getScenarioPrompt(undefined, 'es', 'order-a-meal', { logging: true }), /The text of this conversation is saved to the learner's practice history after the call/);
   assert.match(fresh, /it is never a score or a proficiency level/);
 
   const learner = createLearner();
@@ -184,10 +253,10 @@ function verifyPromptAndTools() {
   assert.match(toolPrompt, /Never record lesson examples or common-error fixtures/);
   assert.doesNotMatch(toolPrompt, /You have no tools/);
 
-  assert.equal(getCoachToolBaseUrl({} as unknown as NodeJS.ProcessEnv), null);
-  assert.equal(getCoachToolBaseUrl({ COACH_TOOL_BASE_URL: ' https://abc.ngrok.app/ ' } as unknown as NodeJS.ProcessEnv), 'https://abc.ngrok.app');
-  assert.throws(() => getCoachToolBaseUrl({ COACH_TOOL_BASE_URL: 'abc.ngrok.app' } as unknown as NodeJS.ProcessEnv), /must be a full URL/);
-  assert.throws(() => getCoachToolBaseUrl({ COACH_TOOL_BASE_URL: 'ftp://abc' } as unknown as NodeJS.ProcessEnv), /http or https/);
+  assert.equal(getPublicBaseUrl({} as unknown as NodeJS.ProcessEnv), null);
+  assert.equal(getPublicBaseUrl({ COACH_PUBLIC_BASE_URL: ' https://abc.ngrok.app/ ' } as unknown as NodeJS.ProcessEnv), 'https://abc.ngrok.app');
+  assert.throws(() => getPublicBaseUrl({ COACH_PUBLIC_BASE_URL: 'abc.ngrok.app' } as unknown as NodeJS.ProcessEnv), /must be a full URL/);
+  assert.throws(() => getPublicBaseUrl({ COACH_PUBLIC_BASE_URL: 'ftp://abc' } as unknown as NodeJS.ProcessEnv), /http or https/);
 
   const env = { NEXT_AGORA_APP_CERTIFICATE: 'fedcba9876543210fedcba9876543210' } as unknown as NodeJS.ProcessEnv;
   const claims = { learnerId: learner.id, language: 'es' as const, lessonId: 'order-a-meal' as const, expiresAt: 2_000 };
@@ -214,8 +283,10 @@ const request = (url: string, { cookie, body, headers, method = 'POST' }: Call =
 async function verifyRoutes(store: 'file' | 'sqlite') {
   process.env.PROGRESS_STORE = store;
   process.env.PROGRESS_DATA_DIR = temporary(`routes-${store}`);
-  delete process.env.COACH_TOOL_BASE_URL;
+  delete process.env.COACH_PUBLIC_BASE_URL;
+  delete process.env.AGORA_WEBHOOK_SECRET;
   await resetProgressStore();
+  const webhook = await import('../app/api/agora-webhook/route');
   const progress = await import('../app/api/progress/route');
   const codeRoute = await import('../app/api/progress/code/route');
   const coach = await import('../app/api/progress/coach/route');
@@ -276,7 +347,7 @@ async function verifyRoutes(store: 'file' | 'sqlite') {
   assert.equal(response.status, 404);
 
   // Coach tool mode: only a valid per-session token can write, and only to its own learner and lesson.
-  process.env.COACH_TOOL_BASE_URL = 'https://coach.example.test';
+  process.env.COACH_PUBLIC_BASE_URL = 'https://coach.example.test';
   process.env.NEXT_AGORA_APP_CERTIFICATE = 'fedcba9876543210fedcba9876543210';
   const token = signToolToken({ learnerId: cookie, language: 'es', lessonId: 'order-a-meal', expiresAt: Date.now() + 60_000 });
   const authorized = { Authorization: `Bearer ${token}` };
@@ -315,9 +386,10 @@ async function verifyRoutes(store: 'file' | 'sqlite') {
   const { POST: invite } = await import('../app/api/invite-agent/route');
   const originalCreate = Agent.prototype.createSession;
   let captured: Agent | null = null;
+  let nextAgentId = 'progress-check-agent';
   Agent.prototype.createSession = (function (this: Agent) {
     captured = this;
-    return { start: async () => 'progress-check-agent' };
+    return { start: async () => nextAgentId };
   }) as unknown as typeof Agent.prototype.createSession;
   const start = (callCookie?: string, lessonId = 'ask-for-the-check') => invite(request('/api/invite-agent', {
     cookie: callCookie,
@@ -352,8 +424,62 @@ async function verifyRoutes(store: 'file' | 'sqlite') {
     agent = captured as unknown as Agent;
     assert.match(agent.instructions!, /No saved practice history is available/);
 
+    // Conversation logging. Without the secret the webhook does not exist and no agent is linked.
+    const sign = (rawBody: string, key = 'webhook-secret-for-checks') => ({ 'Agora-Signature-V2': createHmac('sha256', key).update(rawBody).digest('hex') });
+    const historyEvent = (agentId: string, noticeId = 'notice-1') => JSON.stringify({
+      noticeId, productId: 17, eventType: 103, notifyMs: Date.now(),
+      payload: { agent_id: agentId, name: 'coach', channel: 'progress-channel', start_ts: 1_795_000_000, stop_ts: 1_795_000_400,
+        contents: [{ role: 'assistant', content: 'La cuenta, por favor.' }, { role: 'user', content: 'La cuenta, por favor. Gracias.' }] },
+    });
+    const deliver = (rawBody: string, headers: Record<string, string> = sign(rawBody)) => webhook.POST(request('/api/agora-webhook', { body: rawBody, headers }));
+    const liveStore = async () => (await import('../lib/progress/store')).getProgressStore();
+    response = await deliver(historyEvent('progress-check-agent'));
+    assert.equal(response.status, 404, 'no webhook without the secret');
+    assert.equal(await (await liveStore()).findByAgent('progress-check-agent'), null, 'no agent link is saved while logging is off');
+    assert.match(agent.instructions!, /The text of this conversation is not stored by this app/);
+
+    process.env.AGORA_WEBHOOK_SECRET = 'webhook-secret-for-checks';
+    nextAgentId = 'logged-agent-0001';
+    response = await start(cookie);
+    assert.equal(response.status, 200);
+    assert.match((captured as unknown as Agent).instructions!, /The text of this conversation is saved to the learner's practice history/);
+    assert.equal((await (await liveStore()).findByAgent('logged-agent-0001'))?.id, cookie, 'the started agent is linked to its learner');
+    response = await progress.GET(request('/api/progress', { method: 'GET', cookie }));
+    assert.equal((await response.json()).logging, true);
+    // Unsigned, wrongly signed and tampered requests are rejected before anything is read.
+    const event = historyEvent('logged-agent-0001');
+    assert.equal((await deliver(event, {})).status, 401, 'unsigned');
+    assert.equal((await deliver(event, sign(event, 'wrong-secret'))).status, 401, 'wrong secret');
+    assert.equal((await deliver(event.replace('Gracias', 'Adios'), sign(event))).status, 401, 'tampered body');
+    assert.equal((await deliver('{', sign('{'))).status, 400);
+    // Other events are acknowledged and not stored.
+    const joined = JSON.stringify({ noticeId: 'notice-0', eventType: 101, payload: { agent_id: 'logged-agent-0001' } });
+    assert.deepEqual(await (await deliver(joined)).json(), { result: 'ignored' });
+    // A history event for an agent this app never linked is acknowledged, not stored.
+    const stranger = historyEvent('some-other-agent-9');
+    response = await deliver(stranger);
+    assert.equal(response.status, 200);
+    assert.deepEqual(await response.json(), { result: 'unknown-agent' });
+    // The real event is stored once; a retry or replay changes nothing.
+    assert.deepEqual(await (await deliver(event)).json(), { result: 'stored' });
+    const replay = historyEvent('logged-agent-0001', 'notice-2').replace('Gracias', 'Replayed');
+    assert.deepEqual(await (await deliver(replay)).json(), { result: 'duplicate' });
+    const stored = (await (await liveStore()).get(cookie))!;
+    assert.equal(stored.conversations.length, 1);
+    assert.deepEqual(stored.conversations[0].turns.map((turn) => turn.role), ['assistant', 'user']);
+    assert.equal(stored.conversations[0].lessonId, 'ask-for-the-check');
+    response = await progress.GET(request('/api/progress', { method: 'GET', cookie }));
+    view = await response.json();
+    assert.deepEqual(view.conversations.map((c: { lessonId: string; turns: number }) => [c.lessonId, c.turns]), [['ask-for-the-check', 2]]);
+    assert.equal(JSON.stringify(view).includes('La cuenta'), false, 'conversation text is not sent to the browser');
+    // The next session's instructions can draw on the logged conversation.
+    nextAgentId = 'logged-agent-0002';
+    await start(cookie);
+    assert.match((captured as unknown as Agent).instructions!, /From the last logged conversation .*"La cuenta, por favor\. Gracias\."/);
+
     // Browser mode: same history, no tools.
-    delete process.env.COACH_TOOL_BASE_URL;
+    delete process.env.AGORA_WEBHOOK_SECRET;
+    delete process.env.COACH_PUBLIC_BASE_URL;
     response = await start(cookie);
     agent = captured as unknown as Agent;
     assert.equal(agent.advancedFeatures?.enable_tools, false);
@@ -363,7 +489,7 @@ async function verifyRoutes(store: 'file' | 'sqlite') {
     assert.match(agent.instructions!, /practiced 0 time\(s\) before|not practiced before|not marked complete/);
 
     // A misconfigured tool URL is a loud configuration error.
-    process.env.COACH_TOOL_BASE_URL = 'not-a-url';
+    process.env.COACH_PUBLIC_BASE_URL = 'not-a-url';
     const logError = console.error;
     console.error = () => {};
     try {
@@ -372,8 +498,8 @@ async function verifyRoutes(store: 'file' | 'sqlite') {
       console.error = logError;
     }
     assert.equal(response.status, 500);
-    assert.match((await response.json()).error, /COACH_TOOL_BASE_URL must be a full URL/);
-    delete process.env.COACH_TOOL_BASE_URL;
+    assert.match((await response.json()).error, /COACH_PUBLIC_BASE_URL must be a full URL/);
+    delete process.env.COACH_PUBLIC_BASE_URL;
 
     // A broken store must not stop a practice session.
     process.env.PROGRESS_STORE = 'postgres';
@@ -410,6 +536,17 @@ async function verifyRoutes(store: 'file' | 'sqlite') {
   assert.equal(response.status, 404);
   const coachAfterReset = await findLearnerByCode(await (await import('../lib/progress/store')).getProgressStore(), learnerCode.replace('-', ''));
   assert.equal(coachAfterReset, null);
+  // Reset also deletes logged conversations and agent links: a late or replayed event finds nothing.
+  const afterReset = await (await import('../lib/progress/store')).getProgressStore();
+  assert.equal(await afterReset.get(cookie), null);
+  assert.equal(await afterReset.findByAgent('logged-agent-0001'), null);
+  process.env.COACH_PUBLIC_BASE_URL = 'https://coach.example.test';
+  process.env.AGORA_WEBHOOK_SECRET = 'webhook-secret-for-checks';
+  const late = JSON.stringify({ noticeId: 'notice-3', eventType: 103, payload: { agent_id: 'logged-agent-0002', contents: [{ role: 'user', content: 'late' }] } });
+  response = await webhook.POST(request('/api/agora-webhook', { body: late, headers: { 'Agora-Signature-V2': createHmac('sha256', 'webhook-secret-for-checks').update(late).digest('hex') } }));
+  assert.deepEqual(await response.json(), { result: 'unknown-agent' });
+  delete process.env.COACH_PUBLIC_BASE_URL;
+  delete process.env.AGORA_WEBHOOK_SECRET;
 
   // Guessing codes is rate limited per client address.
   const statuses: number[] = [];
@@ -418,7 +555,7 @@ async function verifyRoutes(store: 'file' | 'sqlite') {
   }
   assert.deepEqual(statuses, [...Array(10).fill(404), 429, 429]);
   await resetProgressStore();
-  console.log(`Progress API passed with the ${store} store: create, read, session report, completion, code, coach tools, invite history, reset, bad input and rate limit.`);
+  console.log(`Progress API passed with the ${store} store: create, read, session report, completion, code, coach tools, conversation webhook, invite history, reset, bad input and rate limit.`);
 }
 
 async function main() {

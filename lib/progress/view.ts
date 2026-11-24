@@ -6,6 +6,10 @@ import type { CorrectionRecord, LanguageProgress } from './types';
 export type ProgressView = {
   /** `coach` when the coach records results through tools; otherwise the browser reports sessions. */
   mode: 'browser' | 'coach';
+  /** True when the server logs conversation text from Agora's webhook. */
+  logging: boolean;
+  /** Logged conversations: metadata only. The text stays on the server. */
+  conversations: { language: string; lessonId: string; endedAt: string; turns: number }[];
   /** True once something has been saved for this browser. */
   saved: boolean;
   /** Learner code for moving to another device. Null until something is saved. */
@@ -16,7 +20,7 @@ export type ProgressView = {
 };
 
 export const EMPTY_PROGRESS: ProgressView = {
-  mode: 'browser', saved: false, code: null, lastLanguage: null, languages: {}, corrections: [],
+  mode: 'browser', logging: false, conversations: [], saved: false, code: null, lastLanguage: null, languages: {}, corrections: [],
 };
 
 export type LessonState = 'not-started' | 'practiced' | 'completed';

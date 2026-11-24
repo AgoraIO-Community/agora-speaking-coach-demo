@@ -128,7 +128,7 @@ export async function POST(request: NextRequest) {
           model: RUNTIME_PROFILE.reasoning.model,
           greetingMessage: scenario.greeting,
           failureMessage: 'Please wait a moment.',
-          maxHistory: 50,
+          maxHistory: 100,
           tools: scenarioTools.length > 0 ? scenarioTools : undefined,
           params: {
             max_tokens: 1024,
@@ -143,7 +143,7 @@ export async function POST(request: NextRequest) {
         //   model: 'gpt-4o-mini',
         //   greetingMessage: scenario.greeting,
         //   failureMessage: 'Please wait a moment.',
-        //   maxHistory: 50,
+        //   maxHistory: 100,
         //   maxTokens: 1024,
         //   temperature: 0.7,
         //   topP: 0.95,

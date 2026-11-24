@@ -85,7 +85,7 @@ for (const { id, name, voice, romanization } of PRACTICE_LANGUAGES) {
 }
 const recognition = new DeepgramSTT({ model: RUNTIME_PROFILE.recognition.model, language: RUNTIME_PROFILE.recognition.language }).toConfig();
 assert.equal(recognition.params?.language, 'multi');
-assert.match(getScenarioPresentation().boundaryShort, /No pronunciation scores or saved learning progress/);
+assert.match(getScenarioPresentation().boundaryShort, /No pronunciation scores or proficiency grades/);
 assert.doesNotMatch(JSON.stringify([config, getScenarioPresentation()]), /it-support|FAQ|troubleshoot|printer|needs-human/i);
 console.log(`Scenario config passed: ${config.id}`);
 

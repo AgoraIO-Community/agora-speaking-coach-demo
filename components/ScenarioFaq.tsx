@@ -30,12 +30,16 @@ const questions = [
     "answer": "Open Phrasebook for the selected lesson’s vocabulary, usage point and model dialogue with English meanings. Japanese and Korean include a romanized reading aid. Ask the coach by voice to simplify or increase difficulty."
   },
   {
-    "question": "Can it grade my pronunciation or save progress?",
-    "answer": "Feedback uses recognized text, not acoustic analysis. The coach helps with vocabulary and grammar but cannot score pronunciation, certify a CEFR level or save learning progress. The practice summary after a session lists the lesson and counts your turns; it is not a grade and is not saved."
+    "question": "Can it grade my pronunciation?",
+    "answer": "No. Feedback uses recognized text, not acoustic analysis. The coach helps with vocabulary and grammar but cannot score pronunciation or certify a CEFR level. Saved progress is practice history, not a grade."
+  },
+  {
+    "question": "What is saved, and how do I continue on another device?",
+    "answer": "The lessons you practice, their dates, your turn counts and the lessons you mark complete are saved without an account. Transcripts and audio are not saved by this app. Open Saved progress on the start page to see your learner code, enter a code from another device, or delete your saved progress. Keep the code private: anyone with it can see and change that progress."
   },
   {
     "question": "Can I change what I said?",
-    "answer": "Yes. Correct a detail, ask for clarification or request a verbal recap. This demo keeps details only within the current conversation."
+    "answer": "Yes. Correct a detail, ask for clarification or request a verbal recap. Details you say stay in the current conversation; only practice history is saved."
   },
   {
     "question": "What if my microphone does not work?",

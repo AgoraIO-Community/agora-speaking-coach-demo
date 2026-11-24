@@ -1,5 +1,7 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
 import { PRACTICE_LANGUAGES } from '../lib/lessons';
 import { Agent } from 'agora-agents';
 import { NextRequest } from 'next/server';
@@ -11,10 +13,14 @@ async function main() {
   const config = getScenarioConfig();
   assert.equal(getScenarioPresentation().id, config.id);
   assert.deepEqual(getScenarioTools(), []);
-  assert.match(getScenarioPrompt(), /conversation-only|No external tools/);
+  // Without COACH_TOOL_BASE_URL the coach has no tools and the browser reports progress.
+  assert.match(getScenarioPrompt(), /You have no tools and cannot save or look up anything yourself/);
   const landing = fs.readFileSync('components/LandingPage.tsx', 'utf8');
   assert.doesNotMatch(landing, /api\/scenarios|shopping_session_id|event_session_id|followUpApi|useShopping|useFollowUps/);
 
+  process.env.PROGRESS_STORE = 'file';
+  process.env.PROGRESS_DATA_DIR = fs.mkdtempSync(path.join(os.tmpdir(), 'coach-conversation-check-'));
+  delete process.env.COACH_TOOL_BASE_URL;
   process.env.NEXT_PUBLIC_AGORA_APP_ID = '0123456789abcdef0123456789abcdef';
   process.env.NEXT_AGORA_APP_CERTIFICATE = 'fedcba9876543210fedcba9876543210';
   const { POST } = await import('../app/api/invite-agent/route');
@@ -76,6 +82,6 @@ async function main() {
     if (originalOrigin === undefined) delete process.env.TOP_TEN_SCENARIO_TOOL_BASE_URL;
     else process.env.TOP_TEN_SCENARIO_TOOL_BASE_URL = originalOrigin;
   }
-  console.log('Conversation-only startup, disabled tools and business-free page passed: ' + config.id);
+  console.log('Startup without coach tools, disabled tools and business-free page passed: ' + config.id);
 }
 main().catch((error) => { console.error(error); process.exitCode = 1; });

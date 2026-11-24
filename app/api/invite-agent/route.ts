@@ -14,6 +14,10 @@ import { DEFAULT_LESSON_ID, DEFAULT_PRACTICE_LANGUAGE, getPracticeLanguage, isLe
 import { RUNTIME_PROFILE } from '@/lib/runtime-profile';
 import { getScenarioConfig, getScenarioPrompt } from '@/lib/agent-config';
 import { getScenarioTools } from '@/lib/agent-tools';
+import { learnerIdFrom, setLearnerCookie } from '@/lib/progress/http';
+import { applyStart, createLearner, getCoachToolBaseUrl, getLearnerHistory, loadLearner, signToolToken } from '@/lib/progress/service';
+import { getProgressStore } from '@/lib/progress/store';
+import type { LearnerRecord } from '@/lib/progress/types';
 
 // agentUid identifies the AI in the RTC channel and shares its default with the client.
 const agentUid = String(DEFAULT_AGENT_UID);
@@ -51,12 +55,40 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // --- 1b. Saved progress ---
+
+    // A broken COACH_TOOL_BASE_URL is a configuration error and fails loudly.
+    const toolBaseUrl = getCoachToolBaseUrl();
+    // The progress store must never block a practice session: on failure the
+    // coach simply starts without history and without tools.
+    let learner: LearnerRecord | null = null;
+    let history: string | null = null;
+    try {
+      const store = await getProgressStore();
+      learner = (await loadLearner(store, learnerIdFrom(request))) ?? createLearner();
+      history = getLearnerHistory(learner, language, lessonId);
+      applyStart(learner, language, lessonId);
+      await store.put(learner);
+    } catch (error) {
+      learner = null;
+      history = null;
+      console.error('Progress unavailable at session start:', error instanceof Error ? error.message : 'unknown error');
+    }
+    // Coach tools need a public URL and a learner to write to. The token binds
+    // tool calls to this learner and lesson for slightly longer than a session.
+    const scenarioTools = toolBaseUrl && learner
+      ? getScenarioTools({
+          baseUrl: toolBaseUrl,
+          token: signToolToken({ learnerId: learner.id, language, lessonId, expiresAt: Date.now() + 15 * 60 * 1000 }),
+        })
+      : getScenarioTools();
+    const promptContext = { history, tools: scenarioTools.length > 0 };
+
     // --- 2. Build and start the agent ---
 
     // AgoraClient authenticates API calls to the Agora Conversational AI service.
     // area: change to Area.EU or Area.AP for European or Asia-Pacific deployments.
-    const scenario = getScenarioConfig(language, lessonId);
-    const scenarioTools = getScenarioTools();
+    const scenario = getScenarioConfig(language, lessonId, promptContext);
     // The explicit builder avoids the SDK 2.14 / agora-token 2.0.7
     // positional-argument mismatch that otherwise creates a one-second token.
     const token = ConvoAITokenBuilder.buildToken(
@@ -74,7 +106,7 @@ export async function POST(request: NextRequest) {
     // Omit vendor API keys for supported models — AgentKit infers reseller presets on start (see Agora Console / billing).
     const agent = new Agent({
       client,
-      instructions: getScenarioPrompt(scenario.id, language, lessonId),
+      instructions: getScenarioPrompt(scenario.id, language, lessonId, promptContext),
       greeting: scenario.greeting,
       failureMessage: 'Please wait a moment.',
       // VAD controls how the agent detects the start and end of a user's turn.
@@ -97,8 +129,8 @@ export async function POST(request: NextRequest) {
         },
       },
       // RTM is required for transcript events in the browser client.
-      // This first version never enables business tools.
-      advancedFeatures: { enable_rtm: true, enable_tools: false },
+      // Tools are enabled only when COACH_TOOL_BASE_URL is set (coach tool mode).
+      advancedFeatures: { enable_rtm: true, enable_tools: scenarioTools.length > 0 },
       // Required for browser RTM events:
       // - data_channel: 'rtm' enables RTM delivery path for state/metrics/errors
       // - enable_error_message emits AGENT_ERROR payloads
@@ -176,11 +208,13 @@ export async function POST(request: NextRequest) {
 
     const agentId = await session.start();
 
-    return NextResponse.json({
+    const response = NextResponse.json({
       agent_id: agentId,
       create_ts: Math.floor(Date.now() / 1000),
       state: 'RUNNING',
     } as AgentResponse);
+    if (learner) setLearnerCookie(response, learner.id);
+    return response;
   } catch (error) {
     console.error('Error starting conversation:', error);
     return NextResponse.json(

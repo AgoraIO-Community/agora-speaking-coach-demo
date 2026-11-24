@@ -5,8 +5,11 @@ import { Button } from './ui/button';
 import { Alert, AlertDescription } from './ui/alert';
 import type { ScenarioPresentation } from '@/lib/presentation';
 
-import { PRACTICE_LANGUAGES, type LessonId, type PracticeLanguage } from '@/lib/lessons';
+import { PRACTICE_LANGUAGES, getLesson, getLessons, getPracticeLanguage, type LessonId, type PracticeLanguage } from '@/lib/lessons';
 import { LessonChooser } from './LessonPreview';
+import { SavedProgress } from './SavedProgress';
+import type { SaveState } from '@/lib/progress/client';
+import { countCompleted, type ProgressView } from '@/lib/progress/view';
 
 export function QuickstartPreCallCard({
   scenario,
@@ -16,8 +19,14 @@ export function QuickstartPreCallCard({
   onLanguageChange,
   lessonId,
   onLessonChange,
+  progress,
+  continueTarget,
+  onContinue,
   onStart,
 }: {
+  progress: { view: ProgressView; save: SaveState; error: string | null };
+  continueTarget: { language: PracticeLanguage; lessonId: LessonId } | null;
+  onContinue: () => void;
   lessonId: LessonId;
   onLessonChange: (lessonId: LessonId) => void;
   scenario: ScenarioPresentation;
@@ -45,7 +54,12 @@ export function QuickstartPreCallCard({
                   onChange={() => onLanguageChange(id)}
                 />
                 <strong lang={id}>{nativeName}</strong>
-                <span>{name}</span>
+                <span>
+                  {name}
+                  {progress.view.languages[id]
+                    ? ` · ${countCompleted(progress.view, id)}/${getLessons(id).length} complete`
+                    : ''}
+                </span>
               </label>
             ))}
           </fieldset>
@@ -62,6 +76,20 @@ export function QuickstartPreCallCard({
             )}
             {isLoading ? 'Connecting…' : scenario.startLabel}
           </Button>
+          <div className="demo-progress-row">
+            {continueTarget ? (
+              continueTarget.language === language && continueTarget.lessonId === lessonId ? (
+                <p className="demo-note" role="status">
+                  Picking up where you left off: {getPracticeLanguage(language).name} · {getLesson(language, lessonId).title}
+                </p>
+              ) : (
+                <Button variant="outline" size="sm" disabled={isLoading} onClick={onContinue}>
+                  Continue: {getPracticeLanguage(continueTarget.language).name} · {getLesson(continueTarget.language, continueTarget.lessonId).title}
+                </Button>
+              )
+            ) : null}
+            <SavedProgress view={progress.view} save={progress.save} error={progress.error} />
+          </div>
           {error ? (
             <Alert variant="destructive">
               <AlertDescription>{error}</AlertDescription>
@@ -73,6 +101,7 @@ export function QuickstartPreCallCard({
           lessonId={lessonId}
           disabled={isLoading}
           onLessonChange={onLessonChange}
+          progress={progress.view}
         />
       </div>
     </section>

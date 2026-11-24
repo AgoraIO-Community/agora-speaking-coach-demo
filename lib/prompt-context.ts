@@ -10,7 +10,7 @@ export const CONVERSATION_RULES = [
   'At the end, summarize what the caller actually said, what the reference supports, what remains unknown and the next step. A spoken summary is not a saved record.',
 ].join('\n');
 
-export const CONVERSATION_BOUNDARY = 'This first version is conversation-only. No business data lookup, external tools, database, record writes, saved results, or cross-session business history are available. Keep user-provided details only in the current conversation. Never claim an order, appointment, registration, feedback submission, callback, payment, shipment or other external action was created, saved or completed. Do not request passwords, verification codes, payment details or unnecessary personal identifiers. Continue useful advice within the supplied facts; explain a human next step only when the requested action or unresolved risk requires it.';
+export const PROGRESS_BOUNDARY = 'The only records this app keeps are practice history: lessons practiced or marked complete, session dates, learner turn counts and, when tools are enabled, corrections the coach records. Full transcripts and audio are not saved by this app. No business data lookup or other external action is available. Never claim an order, appointment, registration, feedback submission, callback, payment, shipment or other external action was created, saved or completed. Do not request passwords, verification codes, payment details, names or other personal identifiers. Continue useful practice within the lesson material.';
 
 export function getConversationContext(timeZone: string, now = new Date()): string {
   const localDate = new Intl.DateTimeFormat('en-CA', {

@@ -9,6 +9,7 @@ import {
   type Phrase,
   type PracticeLanguage,
 } from '@/lib/lessons';
+import { countCompleted, getLessonState, type ProgressView } from '@/lib/progress/view';
 import { Button } from './ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from './ui/dialog';
 
@@ -114,18 +115,30 @@ export function LessonChooser({
   lessonId,
   disabled,
   onLessonChange,
+  progress,
 }: {
+  progress: ProgressView;
   language: PracticeLanguage;
   lessonId: LessonId;
   disabled?: boolean;
   onLessonChange: (lessonId: LessonId) => void;
 }) {
   const { name } = getPracticeLanguage(language);
+  const curriculum = getCurriculum(language);
+  const total = curriculum.reduce((count, level) => count + level.units.reduce((sum, unit) => sum + unit.lessons.length, 0), 0);
+  const STATE_LABEL = { 'not-started': null, practiced: 'Practiced', completed: 'Completed' } as const;
   return (
     <section className="demo-lesson-chooser" aria-label={`${name} lessons`}>
       <fieldset className="demo-lesson-units" disabled={disabled}>
-        <legend>Choose your lesson</legend>
-        {getCurriculum(language).flatMap((level) =>
+        <legend>
+          Choose your lesson
+          {progress.languages[language] ? (
+            <span className="demo-lesson-progress">
+              {countCompleted(progress, language)} of {total} completed in {name}
+            </span>
+          ) : null}
+        </legend>
+        {curriculum.flatMap((level) =>
           level.units.map((unit) => (
             <div key={unit.id} className="demo-lesson-unit">
               <p>
@@ -141,6 +154,11 @@ export function LessonChooser({
                     onChange={() => onLessonChange(lesson.id)}
                   />
                   <span>{lesson.title}</span>
+                  {STATE_LABEL[getLessonState(progress, language, lesson.id)] ? (
+                    <small data-state={getLessonState(progress, language, lesson.id)}>
+                      {STATE_LABEL[getLessonState(progress, language, lesson.id)]}
+                    </small>
+                  ) : null}
                 </label>
               ))}
             </div>
@@ -156,7 +174,7 @@ export function LessonChooser({
         <LessonMaterial language={language} lessonId={lessonId} sections={['vocabulary', 'dialogue']} />
       </div>
       <p className="demo-note">
-        Your coach teaches the selected lesson. Nothing is saved between sessions.
+        Your coach teaches the selected lesson. Lessons you practice are saved to your practice history; transcripts are not.
       </p>
     </section>
   );

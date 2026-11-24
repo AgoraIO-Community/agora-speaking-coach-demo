@@ -66,7 +66,7 @@ Replace `YOUR_AGORA_APP_ID` with the public App ID used in `.env.local`. Next.js
 
 The invite body contains `requester_id` and `channel_name`.
 
-The invite route accepts an optional `practice_language` of `es`, `fr` or `de`. Omitting it selects Spanish. The same choice controls the phrasebook, greeting, coaching instructions and MiniMax voice for the session.
+The invite route accepts an optional `practice_language` of `es`, `fr`, `de`, `pt`, `ja` or `ko`; other values return 400. Omitting it selects Spanish. Each language is one pack in `PRACTICE_LANGUAGES` (`lib/lessons.ts`): name, native name, MiniMax voice and the target-language side of the three shared topics. Appending a pack adds the language to the picker, phrasebook, prompt, greeting and request validation. The same choice controls the phrasebook, greeting, coaching instructions and MiniMax voice for the session.
 
 The token route returns `{ token, uid, channel }`; stop accepts `{ agent_id }` and handles an already-stopping session idempotently. Selected-language lessons from lib/lessons.ts are embedded in the coaching prompt. No business tool is registered. There is no saved-progress or external-action mode. New integrations require implementation and separate verification.
 
@@ -74,14 +74,14 @@ See [contributor guide](AGENTS.md) and [current capabilities](README.md#what-you
 
 ## Usage FAQ ownership
 
-`components/ScenarioFaq.tsx` owns static usage answers; `styles/faq.css` owns disclosure styling, scrolling and transitions. Its header trigger and content share a Radix Dialog root in `LandingPage`. Dialog handles focus trapping, Escape/backdrop dismissal and returning focus to the trigger. FAQ has no session or business API calls.
+`components/ScenarioFaq.tsx` owns static usage answers; `styles/faq.css` owns disclosure styling, scrolling and transitions. Its footer trigger (`components/ScenarioFooter.tsx`) and content share a Radix Dialog root in `LandingPage` that wraps the header, workspace and footer. The header keeps the scenario identity, Phrasebook and the Build Now call to action; the footer holds the technology list, FAQ and Inspector and renders in every page state. On the landing page the language picker and Start practice sit beside the conversation preview at 1024px and wider, and stack below that. Dialog handles focus trapping, Escape/backdrop dismissal and returning focus to the trigger. FAQ has no session or business API calls.
 
 
 <a id="conversation-behavior"></a>
 
 ## Scenario behavior — 2026-11-18
 
-Practice Spanish, French or German with English instructions, explanations and feedback. Ask explicitly for immersion in the selected language.
+Practice Spanish, French, German, Portuguese, Japanese or Korean with English instructions, explanations and feedback. Ask explicitly for immersion in the selected language.
 
 ### Conversation flow
 
@@ -103,7 +103,7 @@ Feedback is based on recognized text, not acoustic analysis. Do not score or ass
 
 ### Speech configuration
 
-The existing Deepgram nova-3 multilingual setting (`multi`) is retained for English and target-language practice. MiniMax uses `Spanish_SereneWoman`, `French_MovieLeadFemale` or `German_SweetLady` according to the selected language. [Agora MiniMax integration](https://docs.agora.io/en/ai/models/tts/minimax.md) documents configurable voice IDs; [MiniMax system voices](https://platform.minimax.io/docs/faq/system-voice-id) lists these voices. The installed SDK serialization is checked locally. Actual managed-service availability, code switching between English and the selected language and speech quality require a real bilingual call; these are not established by local tests. Shorter phrases do not change TTS speed.
+The existing Deepgram nova-3 multilingual setting (`multi`) is retained for English and target-language practice. MiniMax uses `Spanish_SereneWoman`, `French_MovieLeadFemale`, `German_SweetLady`, `Portuguese_GentleTeacher`, `Japanese_KindLady` or `Korean_SoothingLady` according to the selected language. A new language must be covered by Deepgram nova-3 `multi` and have a MiniMax system voice. [Agora MiniMax integration](https://docs.agora.io/en/ai/models/tts/minimax.md) documents configurable voice IDs; [MiniMax system voices](https://platform.minimax.io/docs/faq/system-voice-id) lists these voices. The installed SDK serialization is checked locally. Actual managed-service availability, code switching between English and the selected language and speech quality require a real bilingual call; these are not established by local tests. Shorter phrases do not change TTS speed.
 
 ## Token lifetime compatibility
 

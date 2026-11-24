@@ -3,7 +3,6 @@
 import Image from 'next/image';
 import { useEffect, useRef } from 'react';
 import { Button } from './ui/button';
-import { DialogTrigger } from './ui/dialog';
 import type { PracticeLanguage } from '@/lib/lessons';
 import { LessonGuide } from './LessonPreview';
 import type { ScenarioPresentation } from '@/lib/presentation';
@@ -11,11 +10,11 @@ import type { ScenarioPresentation } from '@/lib/presentation';
 export function ScenarioIdentity({
   scenario,
   language,
-  onInspect,
+  onBuild,
 }: {
   scenario: ScenarioPresentation;
   language: PracticeLanguage;
-  onInspect: () => void;
+  onBuild: React.MouseEventHandler<HTMLButtonElement>;
 }) {
   const headerRef = useRef<HTMLElement>(null);
   useEffect(() => {
@@ -61,26 +60,10 @@ export function ScenarioIdentity({
           <p>{scenario.purpose}</p>
         </div>
       </div>
-      <nav className="demo-header-actions" aria-label="Demo tools">
-        <DialogTrigger asChild>
-          <Button
-            variant="ghost"
-            size="sm"
-            aria-label="Open FAQ"
-            title="FAQ"
-          >
-            <span className="demo-tool-label">FAQ</span>
-          </Button>
-        </DialogTrigger>
+      <nav className="demo-header-actions" aria-label="Practice and build">
         <LessonGuide language={language} />
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={onInspect}
-          aria-label="Open Inspector"
-          title="Inspector"
-        >
-          <span className="demo-tool-label">Inspector</span>
+        <Button size="sm" className="demo-header-cta" onClick={onBuild}>
+          Build Now
         </Button>
       </nav>
     </header>

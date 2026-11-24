@@ -15,6 +15,7 @@ export interface ClientStartRequest {
   requester_id: string;
   channel_name: string;
   practice_language?: import('@/lib/lessons').PracticeLanguage;
+  lesson_id?: import('@/lib/lessons').LessonId;
 }
 
 export interface StopConversationRequest {

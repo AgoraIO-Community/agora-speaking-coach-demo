@@ -19,10 +19,13 @@ Practice Spanish, French, German, Portuguese, Japanese or Korean with English in
 
 ## Features
 
-- Practice introductions, restaurant ordering and workplace conversations.
-- Use beginner, intermediate or advanced practice with English guidance.
-- Read expressions in the selected language and English meanings in the Phrasebook.
+- Choose a language and a lesson from a beginner curriculum: introductions, a workplace conversation, ordering a meal and asking for the check.
+- Practice toward the lesson’s can-do objective with English guidance; the coach receives only the selected lesson.
+- Read the lesson’s vocabulary, usage point and model dialogue in the Phrasebook, with romanized reading aids for Japanese and Korean.
 - Receive vocabulary or grammar feedback based on recognized text.
+- See a practice summary after the session: lesson, vocabulary to review and your turn count. Nothing is saved.
+
+Lesson objectives are original can-do statements written in the style of level A1 of the Council of Europe’s [Common European Framework of Reference for Languages (CEFR)](https://www.coe.int/en/web/common-european-framework-reference-languages). The framework organizes the lessons only; the coach does not assess or certify a learner’s level.
 
 ## Tech Stack
 
@@ -100,10 +103,10 @@ The maintained Community demo uses GitHub Actions for production deployment afte
 
 ## How It Works
 
-1. Select Spanish, French, German, Portuguese, Japanese or Korean, then choose **Start practice** and allow microphone access.
-2. Try: “I am a beginner. Help me introduce myself in Spanish.”
-3. Use beginner, intermediate or advanced practice with English guidance.
-4. Receive vocabulary or grammar feedback based on recognized text.
+1. Select Spanish, French, German, Portuguese, Japanese or Korean and a lesson, then choose **Start practice** and allow microphone access.
+2. Try: “Yes, I’m ready. Please go slowly.”
+3. Practice toward the lesson’s can-do objective with English guidance.
+4. Receive vocabulary or grammar feedback based on recognized text, then review the practice summary when the session ends.
 
 ### Architecture
 
@@ -125,11 +128,11 @@ Next.js issues browser tokens and supplies the scenario instructions when starti
 
 ### What should I say?
 
-I am a beginner. Help me introduce myself in Spanish.
+Yes, I’m ready. Please go slowly.
 
 ### What is available?
 
-Practice introductions, restaurant ordering and workplace conversations. Use beginner, intermediate or advanced practice with English guidance. Read expressions in the selected language and English meanings in the Phrasebook. Receive vocabulary or grammar feedback based on recognized text.
+Choose a language and a lesson from a beginner curriculum: introductions, a workplace conversation, ordering a meal and asking for the check. Practice toward the lesson’s can-do objective with English guidance. Read the lesson’s vocabulary, usage point and model dialogue in the Phrasebook, with romanized reading aids for Japanese and Korean. Receive vocabulary or grammar feedback based on recognized text. See a practice summary after the session; nothing is saved.
 
 ### What remains simulated?
 

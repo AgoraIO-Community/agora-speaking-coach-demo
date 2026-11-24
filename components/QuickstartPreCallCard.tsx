@@ -5,8 +5,8 @@ import { Button } from './ui/button';
 import { Alert, AlertDescription } from './ui/alert';
 import type { ScenarioPresentation } from '@/lib/presentation';
 
-import { PRACTICE_LANGUAGES, type PracticeLanguage } from '@/lib/lessons';
-import { LessonPreview } from './LessonPreview';
+import { PRACTICE_LANGUAGES, type LessonId, type PracticeLanguage } from '@/lib/lessons';
+import { LessonChooser } from './LessonPreview';
 
 export function QuickstartPreCallCard({
   scenario,
@@ -14,8 +14,12 @@ export function QuickstartPreCallCard({
   error,
   language,
   onLanguageChange,
+  lessonId,
+  onLessonChange,
   onStart,
 }: {
+  lessonId: LessonId;
+  onLessonChange: (lessonId: LessonId) => void;
   scenario: ScenarioPresentation;
   isLoading: boolean;
   error: string | null;
@@ -64,7 +68,12 @@ export function QuickstartPreCallCard({
             </Alert>
           ) : null}
         </div>
-        <LessonPreview language={language} />
+        <LessonChooser
+          language={language}
+          lessonId={lessonId}
+          disabled={isLoading}
+          onLessonChange={onLessonChange}
+        />
       </div>
     </section>
   );

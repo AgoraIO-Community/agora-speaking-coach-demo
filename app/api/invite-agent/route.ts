@@ -10,7 +10,7 @@ import {
 import { ConvoAITokenBuilder } from 'agora-token';
 import { ClientStartRequest, AgentResponse } from '@/types/conversation';
 import { DEFAULT_AGENT_UID, TOKEN_LIFETIME_SECONDS } from '@/lib/agora';
-import { DEFAULT_PRACTICE_LANGUAGE, getPracticeLanguage, isPracticeLanguage } from '@/lib/lessons';
+import { DEFAULT_LESSON_ID, DEFAULT_PRACTICE_LANGUAGE, getPracticeLanguage, isLessonId, isPracticeLanguage } from '@/lib/lessons';
 import { RUNTIME_PROFILE } from '@/lib/runtime-profile';
 import { getScenarioConfig, getScenarioPrompt } from '@/lib/agent-config';
 import { getScenarioTools } from '@/lib/agent-tools';
@@ -29,10 +29,14 @@ export async function POST(request: NextRequest) {
     // --- 1. Parse request ---
 
     const body: ClientStartRequest = await request.json();
-    const { requester_id, channel_name, practice_language } = body;
+    const { requester_id, channel_name, practice_language, lesson_id } = body;
     const language = practice_language === undefined ? DEFAULT_PRACTICE_LANGUAGE : practice_language;
     if (!isPracticeLanguage(language)) {
       return NextResponse.json({ error: 'Unsupported practice_language' }, { status: 400 });
+    }
+    const lessonId = lesson_id === undefined ? DEFAULT_LESSON_ID : lesson_id;
+    if (!isLessonId(lessonId)) {
+      return NextResponse.json({ error: 'Unsupported lesson_id' }, { status: 400 });
     }
 
     // Validate required env vars on first request so misconfiguration surfaces
@@ -51,7 +55,7 @@ export async function POST(request: NextRequest) {
 
     // AgoraClient authenticates API calls to the Agora Conversational AI service.
     // area: change to Area.EU or Area.AP for European or Asia-Pacific deployments.
-    const scenario = getScenarioConfig(language);
+    const scenario = getScenarioConfig(language, lessonId);
     const scenarioTools = getScenarioTools();
     // The explicit builder avoids the SDK 2.14 / agora-token 2.0.7
     // positional-argument mismatch that otherwise creates a one-second token.
@@ -70,10 +74,9 @@ export async function POST(request: NextRequest) {
     // Omit vendor API keys for supported models — AgentKit infers reseller presets on start (see Agora Console / billing).
     const agent = new Agent({
       client,
-      instructions: getScenarioPrompt(scenario.id, language),
+      instructions: getScenarioPrompt(scenario.id, language, lessonId),
       greeting: scenario.greeting,
       failureMessage: 'Please wait a moment.',
-      maxHistory: 50,
       // VAD controls how the agent detects the start and end of a user's turn.
       turnDetection: {
         config: {
@@ -125,7 +128,7 @@ export async function POST(request: NextRequest) {
           model: RUNTIME_PROFILE.reasoning.model,
           greetingMessage: scenario.greeting,
           failureMessage: 'Please wait a moment.',
-          maxHistory: 15,
+          maxHistory: 100,
           tools: scenarioTools.length > 0 ? scenarioTools : undefined,
           params: {
             max_tokens: 1024,
@@ -140,7 +143,7 @@ export async function POST(request: NextRequest) {
         //   model: 'gpt-4o-mini',
         //   greetingMessage: scenario.greeting,
         //   failureMessage: 'Please wait a moment.',
-        //   maxHistory: 15,
+        //   maxHistory: 100,
         //   maxTokens: 1024,
         //   temperature: 0.7,
         //   topP: 0.95,

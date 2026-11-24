@@ -7,12 +7,42 @@
 @import '../styles/faq.css';
 @source "../node_modules/agora-agent-uikit/dist";
 
-.spanish-lessons { margin-top: 2rem; width: 100%; text-align: left; }
-.spanish-lessons h3 { font-size: 1rem; font-weight: 600; }
-.spanish-phrases { display: grid; gap: .75rem; padding: 0; margin-top: 1rem; list-style: none; }
-.spanish-phrases li { display: grid; gap: .25rem; padding: .875rem 1rem; border: 1px solid var(--border); border-radius: .75rem; background: var(--card); overflow-wrap: anywhere; }
-.spanish-phrases strong { font-size: 1.1rem; font-weight: 500; }
-.spanish-phrases span { color: var(--muted-foreground); font-size: .875rem; line-height: 1.5; }
+/* Lesson material: shared by the landing chooser, Phrasebook and session summary. */
+.demo-lesson-material { display: grid; gap: .625rem; text-align: left; }
+.demo-lesson-material h4 { margin-top: .375rem; font-size: .75rem; line-height: 1.25rem; font-weight: 500; letter-spacing: .04em; text-transform: uppercase; color: var(--muted-foreground); }
+.demo-lesson-objective { font-size: .9375rem; line-height: 1.5; }
+.demo-lesson-objective span { display: block; font-size: .75rem; line-height: 1.25rem; font-weight: 500; letter-spacing: .04em; text-transform: uppercase; color: var(--muted-foreground); }
+.demo-lesson-point { font-size: .875rem; line-height: 1.5; }
+.demo-lesson-phrases { display: grid; gap: .5rem; padding: 0; margin: 0; list-style: none; }
+.demo-lesson-phrases li { display: grid; gap: .125rem; padding: .625rem .875rem; border: 1px solid var(--border); border-radius: .75rem; background: var(--card); overflow-wrap: anywhere; }
+.demo-lesson-phrases strong { font-size: 1rem; font-weight: 500; }
+.demo-lesson-phrases span, .demo-lesson-phrases small { color: var(--muted-foreground); font-size: .875rem; line-height: 1.5; }
+.demo-lesson-phrases small { font-size: .75rem; }
+.demo-lesson-reading { font-size: .875rem; line-height: 1.4; font-style: italic; }
+.demo-lesson-chooser { display: grid; gap: .75rem; min-width: 0; text-align: left; }
+.demo-lesson-units { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .5rem 1rem; margin: 0; padding: 0; border: 0; min-width: 0; }
+.demo-lesson-units legend { margin-bottom: .625rem; padding: 0; font-size: 14px; line-height: 22px; font-weight: 500; }
+.demo-lesson-unit { display: grid; gap: .375rem; align-content: start; min-width: 0; }
+.demo-lesson-unit p { color: var(--muted-foreground); font-size: 12px; line-height: 20px; }
+.demo-lesson-unit label { position: relative; display: block; padding: .5rem .75rem; border: 1px solid var(--border); border-radius: .625rem; background: var(--card); font-size: .875rem; line-height: 1.375rem; cursor: pointer; overflow-wrap: anywhere; }
+.demo-lesson-unit input { position: absolute; inset: 0; margin: 0; opacity: 0; cursor: inherit; }
+.demo-lesson-unit label:has(input:checked) { border-color: var(--foreground); box-shadow: inset 0 0 0 1px var(--foreground); }
+.demo-lesson-unit label:has(input:focus-visible) { outline: 2px solid var(--ring); outline-offset: 2px; }
+.demo-lesson-units:disabled label { cursor: not-allowed; opacity: .6; }
+.demo-lesson-detail { padding: .875rem; border: 1px solid var(--border); border-radius: .75rem; }
+.demo-lesson-detail:focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }
+@media (min-width: 1024px) {
+  /* Keep the landing page within the viewport; the lesson material scrolls inside its panel. */
+  .demo-lesson-detail { max-height: max(220px, calc(100dvh - 590px)); overflow-y: auto; }
+}
+@media (max-width: 480px) {
+  .demo-lesson-units { grid-template-columns: minmax(0, 1fr); }
+}
+.demo-session-summary { display: grid; gap: .75rem; margin-bottom: 1.25rem; padding: 1rem; border: 1px solid var(--border); border-radius: .75rem; text-align: left; }
+.demo-session-summary h3 { font-size: 1rem; line-height: 1.5rem; font-weight: 500; }
+.demo-session-summary dl { display: flex; flex-wrap: wrap; gap: .5rem 2rem; margin: 0; }
+.demo-session-summary dt { color: var(--muted-foreground); font-size: .75rem; line-height: 1.25rem; }
+.demo-session-summary dd { margin: 0; font-size: .9375rem; line-height: 1.5rem; }
 
 :root {
   color-scheme: light;
@@ -248,6 +278,8 @@ button:disabled {
 }
 .demo-lesson-dialog {
   max-width: 500px;
+  max-height: calc(100dvh - 48px);
+  overflow-y: auto;
   gap: 20px;
 }
 .demo-lesson-dialog [data-slot='dialog-title'] {
@@ -820,24 +852,6 @@ button:disabled {
 .demo-setup-start > [role='alert'] {
   width: 100%;
   text-align: left;
-}
-.demo-setup .spanish-lessons {
-  margin-top: 0;
-}
-.demo-setup .spanish-lessons h3 {
-  font-size: 14px;
-  line-height: 22px;
-  font-weight: 500;
-}
-.demo-setup .spanish-phrases {
-  gap: 0.5rem;
-  margin-top: 0.75rem;
-}
-.demo-setup .spanish-phrases li {
-  padding: 0.625rem 0.875rem;
-}
-.demo-setup .spanish-phrases strong {
-  font-size: 1rem;
 }
 @media (min-width: 1024px) {
   .demo-setup {

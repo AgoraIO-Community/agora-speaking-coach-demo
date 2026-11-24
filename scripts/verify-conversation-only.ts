@@ -44,6 +44,9 @@ async function main() {
       assert.equal(actual.advancedFeatures?.enable_rtm, true);
       assert.equal(actual.advancedFeatures?.enable_tools, false);
       assert.deepEqual(actual.llm?.tools ?? [], []);
+      // History is capped on the model config; the Agent-level option is deprecated and ignored when both are set.
+      assert.equal(actual.llm?.max_history, 100);
+      assert.equal(actual.maxHistory, undefined);
       assert.deepEqual((sessionOptions as { remoteUids: string[] }).remoteUids, ['voice-user']);
       assert.equal(actual.instructions, getScenarioPrompt(config.id, id));
       assert.equal((actual.tts?.params?.voice_setting as { voice_id?: string } | undefined)?.voice_id, voice);
@@ -54,6 +57,20 @@ async function main() {
     }));
     assert.equal(unsupported.status, 400);
     assert.equal(starts, PRACTICE_LANGUAGES.length + 1);
+    // A valid lesson_id selects that lesson's prompt; an unknown one is rejected before any start.
+    const lessonStart = await POST(new NextRequest('http://localhost/api/invite-agent', {
+      method: 'POST',
+      body: JSON.stringify({ requester_id: 'voice-user', channel_name: 'voice-only-channel', practice_language: 'ko', lesson_id: 'order-a-meal' }),
+    }));
+    assert.equal(lessonStart.status, 200);
+    assert.equal((captured as unknown as Agent).instructions, getScenarioPrompt(config.id, 'ko', 'order-a-meal'));
+    assert.notEqual(getScenarioPrompt(config.id, 'ko', 'order-a-meal'), getScenarioPrompt(config.id, 'ko'));
+    const unknownLesson = await POST(new NextRequest('http://localhost/api/invite-agent', {
+      method: 'POST',
+      body: JSON.stringify({ requester_id: 'voice-user', channel_name: 'voice-only-channel', practice_language: 'ko', lesson_id: 'not-a-lesson' }),
+    }));
+    assert.equal(unknownLesson.status, 400);
+    assert.equal(starts, PRACTICE_LANGUAGES.length + 2);
   } finally {
     Agent.prototype.createSession = originalCreate;
     if (originalOrigin === undefined) delete process.env.TOP_TEN_SCENARIO_TOOL_BASE_URL;

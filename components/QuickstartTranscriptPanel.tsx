@@ -15,7 +15,6 @@ type Props = {
   currentInProgressMessage: TranscriptMessage | null;
   agentUID: string;
   state?: VoiceState;
-  hidden?: boolean;
 };
 
 export function QuickstartTranscriptPanel({
@@ -23,18 +22,18 @@ export function QuickstartTranscriptPanel({
   currentInProgressMessage,
   agentUID,
   state = 'ready',
-  hidden,
 }: Props) {
   const messages = currentInProgressMessage
     ? [...messageList, currentInProgressMessage]
     : messageList;
+  const scenario = getScenarioPresentation();
   return (
     <ConversationPanel
       id="it-transcript"
-      name={getScenarioPresentation().name}
+      name={scenario.name}
+      speakerLabels={{ agent: scenario.speakers.agent, user: scenario.speakers.learner }}
       pending={!!currentInProgressMessage}
       voiceState={state}
-      hidden={hidden}
       className="demo-conversation"
       messages={messages.map((message) => ({
         id: `${message.uid}-${message.turn_id ?? message.createdAt ?? 'current'}`,

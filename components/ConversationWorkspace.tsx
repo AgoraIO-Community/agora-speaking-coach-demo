@@ -10,20 +10,19 @@ import type { ScenarioPresentation } from '@/lib/presentation';
 
 export function ConversationWorkspace({
   children,
+  landing,
   activity,
   scenario,
   inspection,
 }: {
   children: ReactNode;
+  /** True while the landing page is shown. The layout follows the rendered view, not the last session's Inspector snapshot. */
+  landing: boolean;
   activity: AgentSignalSnapshot;
   scenario: ScenarioPresentation;
   inspection: InspectionSnapshot;
 }) {
   const [paused, setPaused] = useState(false);
-  const ready =
-    inspection.lifecycle === 'ready' ||
-    inspection.lifecycle === 'starting' ||
-    inspection.lifecycle === 'error';
   const copy = SIGNAL_COPY[activity.state];
   const muted = inspection.lifecycle === 'live' && !activity.micEnabled;
   const description = muted
@@ -36,7 +35,7 @@ export function ConversationWorkspace({
   return (
     <main
       id="main-content"
-      className={`demo-workspace ${ready ? 'demo-workspace-ready' : 'demo-workspace-session'}`}
+      className={`demo-workspace ${landing ? 'demo-workspace-ready' : 'demo-workspace-session'}`}
     >
       <div className="demo-main-content">{children}</div>
       <aside className="demo-sidebar" aria-label={`${scenario.name} activity`}>

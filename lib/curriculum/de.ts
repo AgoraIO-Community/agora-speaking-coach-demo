@@ -5,21 +5,23 @@ export const de = definePack({
   name: 'German',
   nativeName: 'Deutsch',
   voice: 'German_SweetLady',
+  recognitionLocale: 'de-DE',
   lessons: {
     'introduce-yourself': {
-      vocabulary: ['Hallo.', 'Ich heiße Alex.', 'Ich wohne in Boston.', 'Schön, Sie kennenzulernen.', 'Und Sie?'],
-      dialogue: ['Hallo! Wie heißen Sie?', 'Hallo, ich heiße Alex.', 'Wo wohnen Sie?', 'Ich wohne in Boston. Schön, Sie kennenzulernen.'],
+      sampleName: 'Alex',
+      vocabulary: ['Hallo.', 'Ich heiße {name}.', 'Ich wohne in Boston.', 'Schön, Sie kennenzulernen.', 'Und Sie?'],
+      dialogue: ['Hallo! Wie heißen Sie?', 'Hallo, ich heiße {name}.', 'Wo wohnen Sie?', 'Ich wohne in Boston. Schön, Sie kennenzulernen.'],
       prompts: ['Wie heißen Sie?', 'Wo wohnen Sie?'],
       grammar: {
         point: 'With ich, the verb ends in -e: wohnen becomes ich wohne and heißen becomes ich heiße.',
         examples: [
           { text: 'Ich wohne in Boston.', english: 'I live in Boston.' },
-          { text: 'Ich heiße Alex.', english: 'My name is Alex.' },
+          { text: 'Ich heiße {name}.', english: 'My name is {name}.' },
         ],
       },
       errors: [
         { learner: 'Ich wohnen in Boston.', alternative: 'Ich wohne in Boston.', explanation: 'Use wohne with ich.' },
-        { learner: 'Ich bin heiße Alex.', alternative: 'Ich heiße Alex.', explanation: 'Heiße already means am called, so leave out bin.' },
+        { learner: 'Ich bin heiße {name}.', alternative: 'Ich heiße {name}.', explanation: 'Heiße already means am called, so leave out bin.' },
       ],
     },
     'talk-with-a-colleague': {

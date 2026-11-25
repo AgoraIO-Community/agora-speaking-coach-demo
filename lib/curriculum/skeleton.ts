@@ -18,8 +18,13 @@ export const CURRICULUM = [
             objective: 'I can greet someone, say my name and say where I live.',
             setting: (name: string) => `Meet a fictional ${name}-speaking neighbor in Boston. Use a fictional name.`,
             partner: 'Neighbor',
-            vocabulary: ['Hello.', 'My name is Alex.', 'I live in Boston.', 'Nice to meet you.', 'And you?'],
-            dialogue: ['Hello! What is your name?', 'Hello, my name is Alex.', 'Where do you live?', 'I live in Boston. Nice to meet you.'],
+            // The learner can type a first name or nickname on the page. Every
+            // {name} placeholder in this lesson, here and in the language packs,
+            // then shows that name; without one it shows the sample name.
+            takesLearnerName: true,
+            sampleName: 'Alex',
+            vocabulary: ['Hello.', 'My name is {name}.', 'I live in Boston.', 'Nice to meet you.', 'And you?'],
+            dialogue: ['Hello! What is your name?', 'Hello, my name is {name}.', 'Where do you live?', 'I live in Boston. Nice to meet you.'],
             prompts: ['What is your name?', 'Where do you live?'],
           },
           {
@@ -71,7 +76,16 @@ export type Text = string | { text: string; reading: string };
 
 type ErrorFixture = { learner: string; alternative: string; explanation: string };
 
+/** Stands for the practice name in lessons flagged takesLearnerName. */
+export const NAME_PLACEHOLDER = '{name}';
+
 export type LessonPack = {
+  /**
+   * The sample name in this language, required for lessons flagged
+   * takesLearnerName. Write {name} wherever it appears in the lesson, and keep
+   * the surrounding grammar correct for any name.
+   */
+  sampleName?: Text;
   /** Five expressions, in the order of the lesson's English vocabulary. */
   vocabulary: readonly [Text, Text, Text, Text, Text];
   /** Four lines, partner first, in the order of the English dialogue. */
@@ -93,6 +107,13 @@ export type LanguagePack<Id extends string = string> = {
   nativeName: string;
   /** MiniMax system voice ID. */
   voice: string;
+  /**
+   * Regional BCP 47 tag for Agora ARES recognition, for example `es-ES`. It is
+   * sent with en-US as the candidate languages of every session.
+   */
+  recognitionLocale: string;
+  /** Deepgram code for the fallback recognizer's `language_hint`, only when it differs from `id`. */
+  recognitionCode?: string;
   /** Romanization system for reading aids, when the script is not Latin. */
   romanization?: string;
   /** One entry per curriculum lesson; a missing lesson is a type error. */

@@ -5,7 +5,7 @@ import { Button } from './ui/button';
 import { Alert, AlertDescription } from './ui/alert';
 import type { ScenarioPresentation } from '@/lib/presentation';
 
-import { PRACTICE_LANGUAGES, getLesson, getLessons, getPracticeLanguage, type LessonId, type PracticeLanguage } from '@/lib/lessons';
+import { LEARNER_NAME_MAX_LENGTH, PRACTICE_LANGUAGES, getLesson, getLessons, getPracticeLanguage, type LessonId, type PracticeLanguage } from '@/lib/lessons';
 import { LessonChooser } from './LessonPreview';
 import { SavedProgress } from './SavedProgress';
 import type { SaveState } from '@/lib/progress/client';
@@ -19,6 +19,8 @@ export function QuickstartPreCallCard({
   onLanguageChange,
   lessonId,
   onLessonChange,
+  learnerName,
+  onLearnerNameChange,
   progress,
   continueTarget,
   onContinue,
@@ -29,6 +31,8 @@ export function QuickstartPreCallCard({
   onContinue: () => void;
   lessonId: LessonId;
   onLessonChange: (lessonId: LessonId) => void;
+  learnerName: string;
+  onLearnerNameChange: (name: string) => void;
   scenario: ScenarioPresentation;
   isLoading: boolean;
   error: string | null;
@@ -63,6 +67,32 @@ export function QuickstartPreCallCard({
               </label>
             ))}
           </fieldset>
+          {/* Shown only for lessons flagged takesLearnerName in the curriculum. */}
+          {getLesson(language, lessonId).takesLearnerName ? (
+            <div className="demo-learner-name">
+              <label htmlFor="learner-name">
+                Name to practice with <span>(optional)</span>
+              </label>
+              <input
+                id="learner-name"
+                type="text"
+                value={learnerName}
+                onChange={(event) => onLearnerNameChange(event.target.value)}
+                disabled={isLoading}
+                maxLength={LEARNER_NAME_MAX_LENGTH}
+                autoComplete="given-name"
+                autoCapitalize="words"
+                spellCheck={false}
+                aria-describedby="learner-name-note"
+                className="h-10 w-full rounded-md border border-input bg-background px-3"
+              />
+              <p id="learner-name-note" className="demo-note">
+                A first name or nickname. Your coach uses it to teach your introduction in this lesson. {progress.view.logging
+                  ? 'It is not saved as a profile detail, but it appears wherever it is spoken in the saved conversation text.'
+                  : 'It is used for this session only and is not saved.'}
+              </p>
+            </div>
+          ) : null}
           <Button
             size="lg"
             disabled={isLoading}
@@ -99,6 +129,7 @@ export function QuickstartPreCallCard({
         <LessonChooser
           language={language}
           lessonId={lessonId}
+          learnerName={learnerName}
           disabled={isLoading}
           onLessonChange={onLessonChange}
           progress={progress.view}

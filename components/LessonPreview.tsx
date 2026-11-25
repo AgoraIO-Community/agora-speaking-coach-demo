@@ -30,12 +30,15 @@ export function LessonMaterial({
   language,
   lessonId,
   sections = ['vocabulary', 'grammar', 'dialogue'],
+  learnerName,
 }: {
   language: PracticeLanguage;
   lessonId: LessonId;
+  /** Practice name as typed; shown in place of the sample name by lessons that take one. */
+  learnerName?: string;
   sections?: ('vocabulary' | 'grammar' | 'dialogue')[];
 }) {
-  const lesson = getLesson(language, lessonId);
+  const lesson = getLesson(language, lessonId, learnerName);
   const { romanization } = getPracticeLanguage(language);
   return (
     <div className="demo-lesson-material">
@@ -88,7 +91,7 @@ export function LessonMaterial({
   );
 }
 
-export function LessonGuide({ language, lessonId }: { language: PracticeLanguage; lessonId: LessonId }) {
+export function LessonGuide({ language, lessonId, learnerName }: { language: PracticeLanguage; lessonId: LessonId; learnerName?: string }) {
   const [open, setOpen] = useState(false);
   const lesson = getLesson(language, lessonId);
   return (
@@ -102,7 +105,7 @@ export function LessonGuide({ language, lessonId }: { language: PracticeLanguage
               {lesson.title}. Reading support for the selected lesson; you can open this during a call.
             </DialogDescription>
           </DialogHeader>
-          <LessonMaterial language={language} lessonId={lessonId} />
+          <LessonMaterial language={language} lessonId={lessonId} learnerName={learnerName} />
         </DialogContent>
       </Dialog>
     </>
@@ -116,10 +119,12 @@ export function LessonChooser({
   disabled,
   onLessonChange,
   progress,
+  learnerName,
 }: {
   progress: ProgressView;
   language: PracticeLanguage;
   lessonId: LessonId;
+  learnerName?: string;
   disabled?: boolean;
   onLessonChange: (lessonId: LessonId) => void;
 }) {
@@ -171,7 +176,7 @@ export function LessonChooser({
         role="region"
         aria-label="Selected lesson material"
       >
-        <LessonMaterial language={language} lessonId={lessonId} sections={['vocabulary', 'dialogue']} />
+        <LessonMaterial language={language} lessonId={lessonId} sections={['vocabulary', 'dialogue']} learnerName={learnerName} />
       </div>
       <p className="demo-note">
         Your coach teaches the selected lesson. {progress.logging

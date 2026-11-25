@@ -11,11 +11,13 @@ export function ScenarioIdentity({
   scenario,
   language,
   lessonId,
+  learnerName,
   onBuild,
 }: {
   scenario: ScenarioPresentation;
   language: PracticeLanguage;
   lessonId: LessonId;
+  learnerName?: string;
   onBuild: React.MouseEventHandler<HTMLButtonElement>;
 }) {
   const headerRef = useRef<HTMLElement>(null);
@@ -63,7 +65,7 @@ export function ScenarioIdentity({
         </div>
       </div>
       <nav className="demo-header-actions" aria-label="Practice and build">
-        <LessonGuide language={language} lessonId={lessonId} />
+        <LessonGuide language={language} lessonId={lessonId} learnerName={learnerName} />
         <Button size="sm" className="demo-header-cta" onClick={onBuild}>
           Build Now
         </Button>

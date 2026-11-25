@@ -7,6 +7,7 @@ export const presentation: ScenarioPresentation = {
   summary: 'Pick a language and a lesson, then practice Spanish, French, German, Portuguese, Japanese or Korean with English guidance. Ask for immersion when you’re ready. Your practice history is saved so you can pick up where you left off.',
   builtWith: ['Agora Conversational AI', 'Agents SDK', 'Next.js'],
   startLabel: 'Start practice',
+  speakers: { agent: 'Coach', learner: 'You' },
   boundaryShort: 'Conversation-based coaching with saved practice history. No pronunciation scores or proficiency grades.',
   outcomes: [
     { id: 'practiced', label: 'I practiced useful expressions' },

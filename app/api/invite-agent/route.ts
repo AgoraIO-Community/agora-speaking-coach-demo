@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import {
   AgoraClient,
   Agent,
+  AresSTT,
   Area,
   DeepgramSTT,
   MiniMaxTTS,
@@ -10,8 +11,8 @@ import {
 import { ConvoAITokenBuilder } from 'agora-token';
 import { ClientStartRequest, AgentResponse } from '@/types/conversation';
 import { DEFAULT_AGENT_UID, TOKEN_LIFETIME_SECONDS } from '@/lib/agora';
-import { DEFAULT_LESSON_ID, DEFAULT_PRACTICE_LANGUAGE, getPracticeLanguage, isLessonId, isPracticeLanguage } from '@/lib/lessons';
-import { RUNTIME_PROFILE } from '@/lib/runtime-profile';
+import { DEFAULT_LESSON_ID, DEFAULT_PRACTICE_LANGUAGE, getPracticeLanguage, getRecognitionTerms, isLessonId, isPracticeLanguage, lessonTakesLearnerName, sanitizeLearnerName } from '@/lib/lessons';
+import { RUNTIME_PROFILE, getRecognitionEndpointing, getRecognitionHintMode, getRecognitionKeywordsEnabled, getRecognitionLanguages, getRecognitionParams, getRecognitionVendor, withRecognitionLanguages } from '@/lib/runtime-profile';
 import { getScenarioConfig, getScenarioPrompt } from '@/lib/agent-config';
 import { getScenarioTools } from '@/lib/agent-tools';
 import { learnerIdFrom, setLearnerCookie } from '@/lib/progress/http';
@@ -34,7 +35,7 @@ export async function POST(request: NextRequest) {
     // --- 1. Parse request ---
 
     const body: ClientStartRequest = await request.json();
-    const { requester_id, channel_name, practice_language, lesson_id } = body;
+    const { requester_id, channel_name, practice_language, lesson_id, learner_name } = body;
     const language = practice_language === undefined ? DEFAULT_PRACTICE_LANGUAGE : practice_language;
     if (!isPracticeLanguage(language)) {
       return NextResponse.json({ error: 'Unsupported practice_language' }, { status: 400 });
@@ -43,6 +44,13 @@ export async function POST(request: NextRequest) {
     if (!isLessonId(lessonId)) {
       return NextResponse.json({ error: 'Unsupported lesson_id' }, { status: 400 });
     }
+    if (learner_name !== undefined && typeof learner_name !== 'string') {
+      return NextResponse.json({ error: 'learner_name must be a string' }, { status: 400 });
+    }
+    // Optional first name or nickname for lessons that practice it. It is
+    // sanitized, used for this session's prompt and greeting only, ignored for
+    // other lessons, and never written to the progress store or logs.
+    const learnerName = lessonTakesLearnerName(lessonId) ? sanitizeLearnerName(learner_name) : null;
 
     // Validate required env vars on first request so misconfiguration surfaces
     // with a clear error message rather than a silent failure.
@@ -83,27 +91,33 @@ export async function POST(request: NextRequest) {
           token: signToolToken({ learnerId: learner.id, language, lessonId, expiresAt: Date.now() + 15 * 60 * 1000 }),
         })
       : getScenarioTools();
-    const promptContext = { history, tools: scenarioTools.length > 0, logging: Boolean(learner && getConversationLogging()) };
+    const promptContext = { history, tools: scenarioTools.length > 0, logging: Boolean(learner && getConversationLogging()), learnerName };
 
     // --- 2. Build and start the agent ---
 
     // AgoraClient authenticates API calls to the Agora Conversational AI service.
     // area: change to Area.EU or Area.AP for European or Asia-Pacific deployments.
     const scenario = getScenarioConfig(language, lessonId, promptContext);
+    const languagePack = getPracticeLanguage(language);
     // The explicit builder avoids the SDK 2.14 / agora-token 2.0.7
     // positional-argument mismatch that otherwise creates a one-second token.
     const token = ConvoAITokenBuilder.buildToken(
       appId, appCertificate, channel_name, agentUid,
       TOKEN_LIFETIME_SECONDS, TOKEN_LIFETIME_SECONDS,
     );
+    // Recognition: Agora ARES listening for English and the practice language.
+    // COACH_STT_VENDOR=deepgram selects the earlier Deepgram nova-3 `multi`.
+    const recognitionVendor = getRecognitionVendor(process.env.COACH_STT_VENDOR);
     const client = new AgoraClient({
       area: Area.US,
       appId,
       appCertificate,
       authToken: token,
+      // Sends the ARES candidate languages; see withRecognitionLanguages.
+      fetch: withRecognitionLanguages(getRecognitionLanguages(languagePack.recognitionLocale)),
     });
 
-    // Pipeline: Deepgram (reseller) STT → OpenAI (reseller) LLM → MiniMax (reseller) TTS.
+    // Pipeline: Agora ARES STT → OpenAI (reseller) LLM → MiniMax (reseller) TTS.
     // Omit vendor API keys for supported models — AgentKit infers reseller presets on start (see Agora Console / billing).
     const agent = new Agent({
       client,
@@ -118,7 +132,7 @@ export async function POST(request: NextRequest) {
             mode: 'vad',
             vad_config: {
               interrupt_duration_ms: 160, // ms of speech before interruption triggers
-              prefix_padding_ms: 300, // audio captured before speech is detected
+              prefix_padding_ms: RUNTIME_PROFILE.turnDetection.prefixPaddingMs, // audio kept from before speech is detected
             },
           },
           end_of_speech: {
@@ -145,10 +159,26 @@ export async function POST(request: NextRequest) {
       },
     })
       .withStt(
-        new DeepgramSTT({
-          model: RUNTIME_PROFILE.recognition.model,
-          language: RUNTIME_PROFILE.recognition.language,
-        }),
+        recognitionVendor === 'deepgram'
+          ? new DeepgramSTT({
+              model: RUNTIME_PROFILE.recognition.deepgram.model,
+              language: RUNTIME_PROFILE.recognition.deepgram.language,
+              // Plain `multi` by default. COACH_STT_LANGUAGE_HINT and
+              // COACH_STT_ENDPOINTING opt in to the Deepgram language hint and
+              // endpointing; see env.local.example before enabling either.
+              additionalParams: getRecognitionParams(languagePack.recognitionCode ?? languagePack.id, {
+                hint: getRecognitionHintMode(process.env.COACH_STT_LANGUAGE_HINT),
+                endpointing: getRecognitionEndpointing(process.env.COACH_STT_ENDPOINTING),
+              }),
+            })
+          // Managed by Agora, no vendor key. Keywords are this lesson's own
+          // phrases (with the practice name), which nudges recognition toward
+          // them; COACH_STT_KEYWORDS=off sends none.
+          : new AresSTT(
+              getRecognitionKeywordsEnabled(process.env.COACH_STT_KEYWORDS)
+                ? { keywords: getRecognitionTerms(language, lessonId, learnerName) }
+                : {},
+            ),
         // BYOK: uncomment the following block and set NEXT_DEEPGRAM_API_KEY
         // new DeepgramSTT({
         //   apiKey: requireEnv('NEXT_DEEPGRAM_API_KEY'),
@@ -185,7 +215,7 @@ export async function POST(request: NextRequest) {
       .withTts(
         new MiniMaxTTS({
           model: RUNTIME_PROFILE.synthesis.model,
-          voiceId: getPracticeLanguage(language).voice,
+          voiceId: languagePack.voice,
         }),
         // BYOK — ElevenLabs (set NEXT_ELEVENLABS_API_KEY; optional NEXT_ELEVENLABS_VOICE_ID)
         // new (await import('agora-agents')).ElevenLabsTTS({

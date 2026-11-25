@@ -200,7 +200,7 @@ export function ScenarioInspector({
                 snapshot.messages.map((message) => (
                   <div key={message.id}>
                     <strong>
-                      {message.role === 'user' ? 'You' : 'Assistant'}
+                      {message.role === 'user' ? scenario.speakers.learner : scenario.speakers.agent}
                     </strong>
                     <p>{message.text}</p>
                   </div>

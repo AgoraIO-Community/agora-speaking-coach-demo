@@ -5,16 +5,18 @@ export const fr = definePack({
   name: 'French',
   nativeName: 'Français',
   voice: 'French_MovieLeadFemale',
+  recognitionLocale: 'fr-FR',
   lessons: {
     'introduce-yourself': {
-      vocabulary: ['Bonjour.', 'Je m’appelle Alex.', 'J’habite à Boston.', 'Enchanté de vous rencontrer.', 'Et vous ?'],
-      dialogue: ['Bonjour ! Comment vous appelez-vous ?', 'Bonjour, je m’appelle Alex.', 'Où habitez-vous ?', 'J’habite à Boston. Enchanté de vous rencontrer.'],
+      sampleName: 'Alex',
+      vocabulary: ['Bonjour.', 'Je m’appelle {name}.', 'J’habite à Boston.', 'Enchanté de vous rencontrer.', 'Et vous ?'],
+      dialogue: ['Bonjour ! Comment vous appelez-vous ?', 'Bonjour, je m’appelle {name}.', 'Où habitez-vous ?', 'J’habite à Boston. Enchanté de vous rencontrer.'],
       prompts: ['Comment vous appelez-vous ?', 'Où habitez-vous ?'],
       grammar: {
         point: 'Je shortens to j’ before a vowel sound, and the verb takes the je form: habiter becomes habite.',
         examples: [
           { text: 'J’habite à Boston.', english: 'I live in Boston.' },
-          { text: 'Je m’appelle Alex.', english: 'My name is Alex.' },
+          { text: 'Je m’appelle {name}.', english: 'My name is {name}.' },
         ],
       },
       errors: [

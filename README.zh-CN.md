@@ -23,6 +23,7 @@
 
 - 选择语言和初级课程中的一课：自我介绍、职场对话、点餐和结账。
 - 围绕该课的 can-do 目标练习，默认用英语引导；教练只会收到所选课程的内容。
+- 在自我介绍一课中，可选填一个名字或昵称：页面上的课程短语会随输入实时显示该名字，教练也会用它来教你做自我介绍。
 - Phrasebook 展示该课的词汇、用法要点和示范对话；日语和韩语附罗马字读音。
 - 基于转写文本获得词汇和语法反馈。
 - 会话结束后查看练习小结，并标记课程完成。
@@ -35,7 +36,7 @@
 
 - **前端：**  Next.js、React、TypeScript。
 - **语音 AI：**  Agora Conversational AI、Agents SDK、RTC、RTM。
-- **模型：**  Deepgram STT、OpenAI LLM、MiniMax TTS。
+- **模型：**  Agora ARES STT、OpenAI LLM、MiniMax TTS。
 
 <a id="quick-start"></a>
 
@@ -84,6 +85,8 @@ NEXT_AGORA_APP_CERTIFICATE=your_agora_app_certificate
 ```
 
 默认语音和语言模型无需单独配置 API Key。App Certificate 仅限服务端使用，请保存在 `.env.local`，不要暴露在浏览器代码中。配置模板见 [env.local.example](env.local.example)。
+
+语音识别使用 Agora ARES，由 Agora 托管，无需供应商密钥。每次会话同时识别英语和所选的练习语言（例如 `en-US,es-ES`），并把所选课程的短语（课程用到练习名字时也包含该名字）作为识别关键词发送。这一默认设置是在用合成语音做自动化测试后取代 Deepgram nova-3 `multi` 的：对于“Hola.”“Me llamo \<name\>.”（课程中“我的名字是”这一短语加上练习名字）和“Vivo en Boston.”，ARES 在 102 轮中有 102 轮返回完全一致的文本，Deepgram `multi` 在 210 轮中只有 47 轮，其中“Me llamo \<name\>.”每次都被识别成“Mediano ...”之类的词；两者都能正确识别英语。关键词会让识别器偏向课程短语，因此当你只是说得接近时，对话记录也可能显示预期的短语；识别出的文本绝不代表发音评估。测试没有覆盖带口音的真人学习者，所以最终仍要以你自己的会话为准。仅限服务端的变量：`COACH_STT_VENDOR=deepgram` 可切换回 Deepgram `multi`，`COACH_STT_KEYWORDS=off` 可停止发送关键词。`COACH_STT_LANGUAGE_HINT` 和 `COACH_STT_ENDPOINTING` 只对 Deepgram 备用方案生效；提示的列表形式（`on`）在测试中让学习者每一轮的识别文本都为空，请勿使用。测量结果详见[架构说明](ARCHITECTURE.md#speech-configuration)。
 
 ### 保存进度（可选设置）
 
@@ -176,6 +179,8 @@ Yes, I’m ready. Please go slowly.
 ### 我的对话会被保存吗？
 
 本应用从不保存音频。只有部署方同时设置了 `COACH_PUBLIC_BASE_URL` 和 `AGORA_WEBHOOK_SECRET`，并且其 Agora 项目投递 agent history webhook 时，才会保存对话文本；**Saved progress** 会显示记录是否开启。已保存的对话（最新 20 条，最长 90 天）会在你重置进度时删除。本仓库尚未验证真实的 webhook 投递。
+
+自我介绍一课中可选填的练习用名字只随会话启动请求（`learner_name`）发送，并仅用于该次会话的指令和开场白。它不会作为字段保存到进度中。与通话中说出的其他内容一样，在对话记录开启时，它会出现在对话文本里。
 
 <a id="customize"></a>
 

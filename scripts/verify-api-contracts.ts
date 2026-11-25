@@ -128,6 +128,15 @@ async function verifyInviteAgentValidation() {
     body.error === 'channel_name and requester_id are required',
     'POST /api/invite-agent should explain validation failure',
   );
+
+  const badName = await inviteAgent(new NextRequest('http://localhost:3000/api/invite-agent', {
+    body: JSON.stringify({ requester_id: 'user-4321', channel_name: 'test-channel', learner_name: 42 }),
+    method: 'POST',
+  }));
+  assert(
+    badName.status === 400 && (await getJson(badName)).error === 'learner_name must be a string',
+    'POST /api/invite-agent should reject a learner_name that is not text',
+  );
 }
 
 async function verifyInviteAgentSuccess() {
@@ -321,8 +330,114 @@ async function verifyRealTokenLifetimes() {
   }
 }
 
+// Captures the request body the installed SDK really sends to Agora's /join,
+// with the network intercepted, for one practice language.
+type StartProperties = {
+  asr: { vendor: string; language?: string; keywords?: string[]; params: Record<string, unknown> };
+  turn_detection: {
+    config: {
+      speech_threshold: number;
+      start_of_speech: { mode: string; vad_config: Record<string, number> };
+      end_of_speech: { mode: string; vad_config: Record<string, number> };
+    };
+  };
+};
+const RECOGNITION_ENV = ['COACH_STT_VENDOR', 'COACH_STT_KEYWORDS', 'COACH_STT_LANGUAGE_HINT', 'COACH_STT_ENDPOINTING'] as const;
+
+async function captureStartProperties(practiceLanguage: string, env: Partial<Record<(typeof RECOGNITION_ENV)[number], string>> = {}, extra: Record<string, string> = {}) {
+  const originalFetch = globalThis.fetch;
+  const originalEnv = RECOGNITION_ENV.map((name) => process.env[name]);
+  let properties: StartProperties | null = null;
+  globalThis.fetch = async (input, init) => {
+    const path = new URL(typeof input === 'string' ? input : input instanceof URL ? input.href : input.url).pathname;
+    assert(path.endsWith('/join'), 'Unexpected SDK network request in offline recognition check: ' + path);
+    properties = (JSON.parse(String(init?.body)) as { properties: StartProperties }).properties;
+    return Response.json({ agent_id: 'recognition-check-agent', state: 'RUNNING' });
+  };
+  for (const name of RECOGNITION_ENV) {
+    if (env[name] === undefined) delete process.env[name];
+    else process.env[name] = env[name];
+  }
+  try {
+    const { POST: invite } = await import('../app/api/invite-agent/route');
+    const response = await invite(new NextRequest('http://localhost/api/invite-agent', {
+      method: 'POST',
+      body: JSON.stringify({ requester_id: '4321', channel_name: 'recognition-check', practice_language: practiceLanguage, ...extra }),
+    }));
+    assert(response.status === 200, 'Offline start should succeed for ' + practiceLanguage);
+  } finally {
+    globalThis.fetch = originalFetch;
+    RECOGNITION_ENV.forEach((name, index) => {
+      if (originalEnv[index] === undefined) delete process.env[name];
+      else process.env[name] = originalEnv[index];
+    });
+  }
+  assert(properties !== null, 'The start request was not captured for ' + practiceLanguage);
+  const captured = properties as StartProperties;
+  if (process.env.PRINT_START_CONFIG) {
+    console.log(practiceLanguage, JSON.stringify(env), JSON.stringify({ asr: captured.asr, turn_detection: captured.turn_detection }));
+  }
+  return captured;
+}
+
+async function verifyRecognitionSerialization() {
+  const { PRACTICE_LANGUAGES } = await import('../lib/lessons');
+  const same = (left: unknown, right: unknown) => JSON.stringify(left) === JSON.stringify(right);
+  const { getRecognitionTerms } = await import('../lib/lessons');
+  for (const { id, recognitionLocale } of PRACTICE_LANGUAGES) {
+    // Default: Agora ARES with English and the practice language as candidates
+    // and the default lesson's phrases as keywords; no vendor parameters.
+    const { asr, turn_detection: turnDetection } = await captureStartProperties(id);
+    const language = 'en-US,' + recognitionLocale;
+    assert(
+      same(asr, { vendor: 'ares', keywords: getRecognitionTerms(id), language }),
+      id + ': the default start sends ARES with lesson keywords and both candidate languages, nothing else',
+    );
+    const plain = await captureStartProperties(id, { COACH_STT_KEYWORDS: 'off' });
+    assert(same(plain.asr, { vendor: 'ares', language }), id + ': COACH_STT_KEYWORDS=off sends no keywords');
+    const { start_of_speech: start, end_of_speech: end } = turnDetection.config;
+    assert(start.mode === 'vad' && end.mode === 'vad', id + ': several candidate languages require VAD turn detection');
+    assert(start.vad_config.prefix_padding_ms === 800, id + ': prefix padding');
+    assert(start.vad_config.interrupt_duration_ms === 160, id + ': interrupt duration is unchanged');
+    assert(end.vad_config.silence_duration_ms === 1200, id + ': silence duration is unchanged');
+
+    // Fallback: plain nova-3 multi, no hint and no endpointing, single interaction language.
+    const fallback = await captureStartProperties(id, { COACH_STT_VENDOR: 'deepgram' });
+    assert(fallback.asr.vendor === 'deepgram' && fallback.asr.language === 'en-US', id + ': Deepgram fallback vendor');
+    assert(same(fallback.asr.params, { language: 'multi' }), id + ': the Deepgram fallback sends plain multi and nothing else');
+
+    // Fallback opt-in: hint list (a JSON array) and endpointing.
+    const hinted = await captureStartProperties(id, { COACH_STT_VENDOR: 'deepgram', COACH_STT_LANGUAGE_HINT: 'on', COACH_STT_ENDPOINTING: '100' });
+    assert(
+      same(hinted.asr.params, { endpointing: 100, language_hint: ['en', id], language: 'multi' }),
+      id + ': opt-in sends multi, a language_hint array of English and the practice language, and endpointing',
+    );
+    const single = await captureStartProperties(id, { COACH_STT_VENDOR: 'deepgram', COACH_STT_LANGUAGE_HINT: 'single' });
+    assert(same(single.asr.params, { language_hint: id, language: 'multi' }), id + ': single sends one hint string');
+    // The Deepgram tuning variables never reach ARES.
+    const ignored = await captureStartProperties(id, { COACH_STT_LANGUAGE_HINT: 'on', COACH_STT_ENDPOINTING: '100' });
+    assert(same(ignored.asr, asr), id + ': Deepgram tuning variables do not change the ARES request');
+  }
+  // Keywords follow the selected lesson and show the typed practice name.
+  const named = await captureStartProperties('es', {}, { lesson_id: 'introduce-yourself', learner_name: ' Zuzanna ' });
+  assert(same(named.asr.keywords, getRecognitionTerms('es', 'introduce-yourself', 'Zuzanna')), 'Keywords use the sanitized practice name');
+  assert(named.asr.keywords?.includes('Me llamo Zuzanna') && !JSON.stringify(named.asr.keywords).includes('Alex'), 'The sample name is replaced in keywords');
+  const meal = await captureStartProperties('es', {}, { lesson_id: 'order-a-meal', learner_name: 'Zuzanna' });
+  assert(same(meal.asr.keywords, getRecognitionTerms('es', 'order-a-meal')), 'Keywords come from the selected lesson only');
+  assert(!JSON.stringify(meal.asr.keywords).includes('Zuzanna'), 'A lesson without a practice name sends no name');
+  for (const value of ['off', 'OFF', '']) {
+    const { asr } = await captureStartProperties('es', { COACH_STT_VENDOR: 'deepgram', COACH_STT_LANGUAGE_HINT: value });
+    assert(same(asr.params, { language: 'multi' }), 'COACH_STT_LANGUAGE_HINT=' + value + ' must omit language_hint');
+  }
+  for (const value of ['', 'ares', 'unknown']) {
+    const { asr } = await captureStartProperties('es', { COACH_STT_VENDOR: value });
+    assert(asr.vendor === 'ares' && asr.language === 'en-US,es-ES', 'COACH_STT_VENDOR=' + value + ' must use ARES');
+  }
+}
+
 async function main() {
   await verifyRealTokenLifetimes();
+  await verifyRecognitionSerialization();
   await verifyGenerateAgoraTokenRoute();
   await verifyGenerateAgoraTokenReplacesZeroUid();
   await verifyInviteAgentValidation();

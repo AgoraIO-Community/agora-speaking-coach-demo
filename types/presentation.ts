@@ -5,6 +5,8 @@ export interface ScenarioPresentation {
   summary: string;
   builtWith: string[];
   startLabel: string;
+  /** Speaker labels shown beside transcript turns. */
+  speakers: { agent: string; learner: string };
   boundaryShort: string;
   outcomes: { id: string; label: string }[];
   developer: {

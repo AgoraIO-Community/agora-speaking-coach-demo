@@ -1,7 +1,7 @@
 'use client';
 
-import type { MouseEventHandler, ReactNode } from 'react';
-import { MessageSquareText, Mic, MicOff, PhoneOff } from 'lucide-react';
+import type { ReactNode } from 'react';
+import { Mic, MicOff, PhoneOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Tooltip,
@@ -19,12 +19,8 @@ export interface VoiceDockProps {
   disabled?: boolean;
   ending?: boolean;
   micPending?: boolean;
-  conversationOpen: boolean;
-  conversationId: string;
   onToggleVoice: () => void;
   onEnd: () => void;
-  onBuild: MouseEventHandler<HTMLButtonElement>;
-  onToggleConversation: () => void;
   devices: ReactNode;
   className?: string;
 }
@@ -34,12 +30,8 @@ export function VoiceDock({
   disabled = false,
   ending = false,
   micPending = false,
-  conversationOpen,
-  conversationId,
   onToggleVoice,
   onEnd,
-  onBuild,
-  onToggleConversation,
   devices,
   className,
 }: VoiceDockProps) {
@@ -63,27 +55,6 @@ export function VoiceDock({
         </span>
       </div>
       <div className="ag-action-row">
-        <div className="ag-dock-build">
-          <Button variant="outline" onClick={onBuild}>Build Now</Button>
-        </div>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              size="icon"
-              variant="ghost"
-              aria-label={
-                conversationOpen ? 'Hide conversation' : 'Show conversation'
-              }
-              aria-expanded={conversationOpen}
-              aria-controls={conversationId}
-              aria-pressed={conversationOpen}
-              onClick={onToggleConversation}
-            >
-              <MessageSquareText data-icon="inline-start" />
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent>Conversation</TooltipContent>
-        </Tooltip>
         <Tooltip>
           <TooltipTrigger asChild>
             <Button

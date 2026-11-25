@@ -7,19 +7,21 @@ export const ja = definePack({
   name: 'Japanese',
   nativeName: '日本語',
   voice: 'Japanese_KindLady',
+  recognitionLocale: 'ja-JP',
   romanization: 'Hepburn romanization',
   lessons: {
     'introduce-yourself': {
+      sampleName: r('アレックス', 'Arekkusu'),
       vocabulary: [
         r('こんにちは。', 'Konnichiwa.'),
-        r('アレックスです。', 'Arekkusu desu.'),
+        r('{name}です。', '{name} desu.'),
         r('ボストンに住んでいます。', 'Bosuton ni sunde imasu.'),
         r('はじめまして。', 'Hajimemashite.'),
         r('あなたは？', 'Anata wa?'),
       ],
       dialogue: [
         r('こんにちは！お名前は何ですか。', 'Konnichiwa! Onamae wa nan desu ka.'),
-        r('こんにちは、アレックスです。', 'Konnichiwa, Arekkusu desu.'),
+        r('こんにちは、{name}です。', 'Konnichiwa, {name} desu.'),
         r('どこに住んでいますか。', 'Doko ni sunde imasu ka.'),
         r('ボストンに住んでいます。よろしくお願いします。', 'Bosuton ni sunde imasu. Yoroshiku onegai shimasu.'),
       ],
@@ -31,12 +33,12 @@ export const ja = definePack({
         point: 'The particle に marks the place where you live with 住んでいます. です ends a polite sentence.',
         examples: [
           { text: r('ボストンに住んでいます。', 'Bosuton ni sunde imasu.'), english: 'I live in Boston.' },
-          { text: r('アレックスです。', 'Arekkusu desu.'), english: 'I am Alex.' },
+          { text: r('{name}です。', '{name} desu.'), english: 'I am {name}.' },
         ],
       },
       errors: [
         { learner: 'ボストンで住んでいます。', alternative: 'ボストンに住んでいます。', explanation: 'Use the particle に with 住んでいます to say where you live.' },
-        { learner: '私はアレックス。', alternative: '私はアレックスです。', explanation: 'Add です to make the sentence polite.' },
+        { learner: '私は{name}。', alternative: '私は{name}です。', explanation: 'Add です to make the sentence polite.' },
       ],
     },
     'talk-with-a-colleague': {

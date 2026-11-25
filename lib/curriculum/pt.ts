@@ -5,10 +5,12 @@ export const pt = definePack({
   name: 'Portuguese',
   nativeName: 'Português',
   voice: 'Portuguese_GentleTeacher',
+  recognitionLocale: 'pt-PT',
   lessons: {
     'introduce-yourself': {
-      vocabulary: ['Olá.', 'Meu nome é Alex.', 'Eu moro em Boston.', 'Muito prazer.', 'E você?'],
-      dialogue: ['Olá! Como você se chama?', 'Olá, meu nome é Alex.', 'Onde você mora?', 'Eu moro em Boston. Muito prazer.'],
+      sampleName: 'Alex',
+      vocabulary: ['Olá.', 'Meu nome é {name}.', 'Eu moro em Boston.', 'Muito prazer.', 'E você?'],
+      dialogue: ['Olá! Como você se chama?', 'Olá, meu nome é {name}.', 'Onde você mora?', 'Eu moro em Boston. Muito prazer.'],
       prompts: ['Como você se chama?', 'Onde você mora?'],
       grammar: {
         point: 'Verbs change their ending for I. Morar becomes eu moro, and with você the verb is mora.',
@@ -19,7 +21,7 @@ export const pt = definePack({
       },
       errors: [
         { learner: 'Eu morar em Boston.', alternative: 'Eu moro em Boston.', explanation: 'Use moro for I live.' },
-        { learner: 'Meu nome sou Alex.', alternative: 'Meu nome é Alex.', explanation: 'Use é with meu nome. Sou goes with eu.' },
+        { learner: 'Meu nome sou {name}.', alternative: 'Meu nome é {name}.', explanation: 'Use é with meu nome. Sou goes with eu.' },
       ],
     },
     'talk-with-a-colleague': {

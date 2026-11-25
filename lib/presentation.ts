@@ -4,10 +4,11 @@ export const presentation: ScenarioPresentation = {
   id: '06-speaking-coach',
   name: 'Multilingual Speaking Coach',
   purpose: "Language practice with English guidance",
-  summary: 'Pick a language and a lesson, then practice Spanish, French, German, Portuguese, Japanese or Korean with English guidance. Ask for immersion when you’re ready.',
+  summary: 'Pick a language and a lesson, then practice Spanish, French, German, Portuguese, Japanese or Korean with English guidance. Ask for immersion when you’re ready. Your practice history is saved so you can pick up where you left off.',
   builtWith: ['Agora Conversational AI', 'Agents SDK', 'Next.js'],
   startLabel: 'Start practice',
-  boundaryShort: 'Conversation-based coaching. No pronunciation scores or saved learning progress.',
+  speakers: { agent: 'Coach', learner: 'You' },
+  boundaryShort: 'Conversation-based coaching with saved practice history. No pronunciation scores or proficiency grades.',
   outcomes: [
     { id: 'practiced', label: 'I practiced useful expressions' },
     { id: 'clearer', label: 'I understand an expression better' },
@@ -39,8 +40,12 @@ export const presentation: ScenarioPresentation = {
         "path": "app/api/invite-agent/route.ts"
       },
       {
-        "title": "Connect business tools",
+        "title": "Change what the coach can record",
         "path": "lib/agent-tools.ts"
+      },
+      {
+        "title": "Choose where progress is stored",
+        "path": "lib/progress/store.ts"
       },
       {
         "title": "Adapt this scenario’s value and UI content",

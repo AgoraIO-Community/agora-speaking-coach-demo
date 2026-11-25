@@ -5,21 +5,23 @@ export const es = definePack({
   name: 'Spanish',
   nativeName: 'Español',
   voice: 'Spanish_SereneWoman',
+  recognitionLocale: 'es-ES',
   lessons: {
     'introduce-yourself': {
-      vocabulary: ['Hola.', 'Me llamo Alex.', 'Vivo en Boston.', 'Mucho gusto.', '¿Y tú?'],
-      dialogue: ['¡Hola! ¿Cómo te llamas?', 'Hola, me llamo Alex.', '¿Dónde vives?', 'Vivo en Boston. Mucho gusto.'],
+      sampleName: 'Alex',
+      vocabulary: ['Hola.', 'Me llamo {name}.', 'Vivo en Boston.', 'Mucho gusto.', '¿Y tú?'],
+      dialogue: ['¡Hola! ¿Cómo te llamas?', 'Hola, me llamo {name}.', '¿Dónde vives?', 'Vivo en Boston. Mucho gusto.'],
       prompts: ['¿Cómo te llamas?', '¿Dónde vives?'],
       grammar: {
         point: 'Verbs change their ending for I. Vivir becomes vivo, and the subject yo is usually left out.',
         examples: [
           { text: 'Vivo en Boston.', english: 'I live in Boston.' },
-          { text: 'Me llamo Alex.', english: 'My name is Alex.' },
+          { text: 'Me llamo {name}.', english: 'My name is {name}.' },
         ],
       },
       errors: [
         { learner: 'Yo vivir en Boston.', alternative: 'Vivo en Boston.', explanation: 'Use vivo for I live. The subject yo is optional here.' },
-        { learner: 'Mi llamo Alex.', alternative: 'Me llamo Alex.', explanation: 'Use me, not mi, with llamo.' },
+        { learner: 'Mi llamo {name}.', alternative: 'Me llamo {name}.', explanation: 'Use me, not mi, with llamo.' },
       ],
     },
     'talk-with-a-colleague': {

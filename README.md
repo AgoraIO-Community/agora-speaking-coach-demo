@@ -21,9 +21,11 @@ Practice Spanish, French, German, Portuguese, Japanese or Korean with English in
 
 - Choose a language and a lesson from a beginner curriculum: introductions, a workplace conversation, ordering a meal and asking for the check.
 - Practice toward the lesson’s can-do objective with English guidance; the coach receives only the selected lesson.
+- For the introduction lesson, optionally type a first name or nickname: the lesson phrases on the page show it as you type, and the coach teaches the introduction with it.
 - Read the lesson’s vocabulary, usage point and model dialogue in the Phrasebook, with romanized reading aids for Japanese and Korean.
 - Receive vocabulary or grammar feedback based on recognized text.
-- See a practice summary after the session: lesson, vocabulary to review and your turn count. Nothing is saved.
+- See a practice summary after the session and mark the lesson complete.
+- Pick up where you left off: practice history is saved without an account, with a learner code for switching devices.
 
 Lesson objectives are original can-do statements written in the style of level A1 of the Council of Europe’s [Common European Framework of Reference for Languages (CEFR)](https://www.coe.int/en/web/common-european-framework-reference-languages). The framework organizes the lessons only; the coach does not assess or certify a learner’s level.
 
@@ -31,7 +33,7 @@ Lesson objectives are original can-do statements written in the style of level A
 
 - **Frontend:** Next.js, React, TypeScript.
 - **Voice AI:** Agora Conversational AI, Agents SDK, RTC and RTM.
-- **Models:** Deepgram STT, OpenAI LLM, MiniMax TTS.
+- **Models:** Agora ARES STT, OpenAI LLM, MiniMax TTS.
 
 <a id="quick-start"></a>
 <a id="run-it"></a>
@@ -77,6 +79,22 @@ NEXT_AGORA_APP_CERTIFICATE=your_agora_app_certificate
 You don’t need separate API keys for the default speech and language models. Put the App Certificate in `.env.local` and never expose it in browser code.
 
 See [env.local.example](env.local.example) for the configuration template.
+
+Speech recognition uses Agora ARES, managed by Agora with no vendor key. Each session listens for English plus the selected practice language (for example `en-US,es-ES`) and sends the selected lesson's phrases, with your practice name where the lesson uses one, as recognition keywords. This replaced Deepgram nova-3 `multi` after an automated test with synthetic voices: for "Hola.", "Me llamo \<name\>." (the lesson's "My name is" phrase with a practice name) and "Vivo en Boston." ARES returned the exact text in 102 of 102 turns and Deepgram `multi` in 47 of 210, where "Me llamo \<name\>." came back as words such as "Mediano ..." every time; English was recognized with both. Keywords nudge the recognizer toward the lesson phrases, so the transcript can show the expected phrase when you were only close to it, and recognized text is never a pronunciation assessment. A real accented learner was not measured, so your own session is the final test. Server-only variables: `COACH_STT_VENDOR=deepgram` returns to Deepgram `multi`, and `COACH_STT_KEYWORDS=off` stops sending keywords. `COACH_STT_LANGUAGE_HINT` and `COACH_STT_ENDPOINTING` apply to the Deepgram fallback only; the list form of the hint (`on`) returned empty text for every learner turn in testing and should not be used. See [architecture](ARCHITECTURE.md#speech-configuration) for the measurements.
+
+### Saved progress (optional settings)
+
+Practice history is saved with no extra setup: lessons practiced or marked complete, session dates and turn counts, per anonymous browser. **Saved progress** on the start page shows a learner code for continuing on another device and a reset action.
+
+| Variable | Default | Purpose |
+|---|---|---|
+| `PROGRESS_STORE` | `file` | `file` (JSON file), `sqlite` (database file) or `postgres` (Neon or Supabase). File and SQLite need a persistent disk; use `postgres` on serverless hosts such as Vercel. |
+| `PROGRESS_DATA_DIR` | `.scenario-data` | Directory for the file and SQLite stores. In Docker, mount a volume at `/app/.scenario-data`. |
+| `DATABASE_URL` | unset | Connection string for `postgres`. Not verified against a live database in this repository's checks. |
+| `COACH_PUBLIC_BASE_URL` | unset | This app's public address (hosted, or a tunnel such as ngrok). When set, the coach records corrections and the lesson result itself. Unset: the browser reports sessions and you mark lessons complete. |
+| `AGORA_WEBHOOK_SECRET` | unset | With `COACH_PUBLIC_BASE_URL`, logs the text of each finished conversation from Agora's webhook at `<url>/api/agora-webhook`. Unset: conversations are not stored. |
+
+Conversation logging also needs a webhook on your Agora project for the agent history event, for example `agora project webhook create --feature convoai --url <url>/api/agora-webhook --events agent-memory`. `pnpm run doctor` reports which of these modes are configured. See [architecture](ARCHITECTURE.md#saved-progress-and-conversation-logging) for the data model, retention and limits.
 
 **2. Start the app**
 
@@ -132,11 +150,11 @@ Yes, I’m ready. Please go slowly.
 
 ### What is available?
 
-Choose a language and a lesson from a beginner curriculum: introductions, a workplace conversation, ordering a meal and asking for the check. Practice toward the lesson’s can-do objective with English guidance. Read the lesson’s vocabulary, usage point and model dialogue in the Phrasebook, with romanized reading aids for Japanese and Korean. Receive vocabulary or grammar feedback based on recognized text. See a practice summary after the session; nothing is saved.
+Choose a language and a lesson from a beginner curriculum: introductions, a workplace conversation, ordering a meal and asking for the check. Practice toward the lesson’s can-do objective with English guidance. Read the lesson’s vocabulary, usage point and model dialogue in the Phrasebook, with romanized reading aids for Japanese and Korean. Receive vocabulary or grammar feedback based on recognized text. See a practice summary after the session and pick up where you left off: practice history is saved without an account.
 
 ### What remains simulated?
 
-Practice uses recognized text. No pronunciation scoring, certified proficiency or saved progress is provided. English guidance remains default unless immersion in the selected language is requested.
+Practice uses recognized text. No pronunciation scoring or certified proficiency is provided; saved progress is practice history, not a grade. English guidance remains default unless immersion in the selected language is requested.
 
 ### Why can’t I start a voice session?
 
@@ -145,6 +163,12 @@ Check browser microphone permission, the selected input device, and your Agora A
 ### Can I save a copy of the conversation?
 
 Yes. Open Inspector and select **Export session evidence** to download the current or latest call as JSON. Export it before starting another call or refreshing the page.
+
+### Are my conversations saved?
+
+Audio is never saved by this app. Conversation text is stored only when the deployment sets `COACH_PUBLIC_BASE_URL` and `AGORA_WEBHOOK_SECRET` and its Agora project delivers the agent history webhook; **Saved progress** shows whether logging is on. Stored conversations (the newest 20, up to 90 days) are deleted when you reset your progress. Live webhook delivery has not been verified in this repository.
+
+The optional practice name for the introduction lesson is sent only with the session start request (`learner_name`) and is used for that session’s instructions and greeting. It is not stored as a field in saved progress. Like anything else said in the call, it is part of the conversation text when logging is on.
 
 <a id="customize"></a>
 

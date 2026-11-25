@@ -23,18 +23,20 @@
 
 - 选择语言和初级课程中的一课：自我介绍、职场对话、点餐和结账。
 - 围绕该课的 can-do 目标练习，默认用英语引导；教练只会收到所选课程的内容。
+- 在自我介绍一课中，可选填一个名字或昵称：页面上的课程短语会随输入实时显示该名字，教练也会用它来教你做自我介绍。
 - Phrasebook 展示该课的词汇、用法要点和示范对话；日语和韩语附罗马字读音。
 - 基于转写文本获得词汇和语法反馈。
-- 会话结束后查看练习小结：课程、待复习词汇和你的发言次数。不保存任何内容。
+- 会话结束后查看练习小结，并标记课程完成。
+- 从上次中断处继续：无需账号即可保存练习记录，并提供学习码用于切换设备。
 
 课程目标是参照欧洲委员会[《欧洲语言共同参考框架》(CEFR)](https://www.coe.int/en/web/common-european-framework-reference-languages) A1 级风格原创编写的 can-do 陈述。该框架仅用于组织课程；教练不评估或认证学习者的水平。
-- 基于转写文本纠正词汇和语法；不评分发音或保存进度。
+- 基于转写文本纠正词汇和语法；不评分发音。
 
 ## 技术栈
 
 - **前端：**  Next.js、React、TypeScript。
 - **语音 AI：**  Agora Conversational AI、Agents SDK、RTC、RTM。
-- **模型：**  Deepgram STT、OpenAI LLM、MiniMax TTS。
+- **模型：**  Agora ARES STT、OpenAI LLM、MiniMax TTS。
 
 <a id="quick-start"></a>
 
@@ -84,6 +86,22 @@ NEXT_AGORA_APP_CERTIFICATE=your_agora_app_certificate
 
 默认语音和语言模型无需单独配置 API Key。App Certificate 仅限服务端使用，请保存在 `.env.local`，不要暴露在浏览器代码中。配置模板见 [env.local.example](env.local.example)。
 
+语音识别使用 Agora ARES，由 Agora 托管，无需供应商密钥。每次会话同时识别英语和所选的练习语言（例如 `en-US,es-ES`），并把所选课程的短语（课程用到练习名字时也包含该名字）作为识别关键词发送。这一默认设置是在用合成语音做自动化测试后取代 Deepgram nova-3 `multi` 的：对于“Hola.”“Me llamo \<name\>.”（课程中“我的名字是”这一短语加上练习名字）和“Vivo en Boston.”，ARES 在 102 轮中有 102 轮返回完全一致的文本，Deepgram `multi` 在 210 轮中只有 47 轮，其中“Me llamo \<name\>.”每次都被识别成“Mediano ...”之类的词；两者都能正确识别英语。关键词会让识别器偏向课程短语，因此当你只是说得接近时，对话记录也可能显示预期的短语；识别出的文本绝不代表发音评估。测试没有覆盖带口音的真人学习者，所以最终仍要以你自己的会话为准。仅限服务端的变量：`COACH_STT_VENDOR=deepgram` 可切换回 Deepgram `multi`，`COACH_STT_KEYWORDS=off` 可停止发送关键词。`COACH_STT_LANGUAGE_HINT` 和 `COACH_STT_ENDPOINTING` 只对 Deepgram 备用方案生效；提示的列表形式（`on`）在测试中让学习者每一轮的识别文本都为空，请勿使用。测量结果详见[架构说明](ARCHITECTURE.md#speech-configuration)。
+
+### 保存进度（可选设置）
+
+无需额外配置即可保存练习记录：练习过或标记完成的课程、会话日期和发言次数，按匿名浏览器保存。首页的 **Saved progress** 会显示学习码，可用于在其他设备上继续，也可重置进度。
+
+| 变量 | 默认值 | 用途 |
+|---|---|---|
+| `PROGRESS_STORE` | `file` | `file`（JSON 文件）、`sqlite`（数据库文件）或 `postgres`（Neon 或 Supabase）。文件和 SQLite 需要持久磁盘；在 Vercel 等无服务器环境请使用 `postgres`。 |
+| `PROGRESS_DATA_DIR` | `.scenario-data` | 文件和 SQLite 存储所在目录。Docker 中请将卷挂载到 `/app/.scenario-data`。 |
+| `DATABASE_URL` | 未设置 | `postgres` 的连接串。本仓库的检查未在真实数据库上验证。 |
+| `COACH_PUBLIC_BASE_URL` | 未设置 | 本应用的公网地址（托管部署，或 ngrok 等隧道）。设置后由教练记录纠正和课程结果；未设置时由浏览器上报会话，由你标记课程完成。 |
+| `AGORA_WEBHOOK_SECRET` | 未设置 | 与 `COACH_PUBLIC_BASE_URL` 同时设置时，通过 Agora webhook（`<url>/api/agora-webhook`）记录每次结束对话的文本。未设置则不保存对话。 |
+
+对话记录还需要在 Agora 项目上为 agent history 事件配置 webhook，例如 `agora project webhook create --feature convoai --url <url>/api/agora-webhook --events agent-memory`。`pnpm run doctor` 会报告已配置的模式。数据模型、保留期限和限制见 [architecture](ARCHITECTURE.md#saved-progress-and-conversation-logging)。
+
 **2. 启动应用**
 
 ```bash
@@ -116,7 +134,7 @@ Community 官方演示站通过 GitHub Actions 在验证通过后部署生产环
 1. 选择西班牙语、法语、德语、葡萄牙语、日语或韩语并选择一课，再点击 **Start practice** 并允许麦克风访问。
 2. 试说：“Yes, I’m ready. Please go slowly.”
 3. 围绕该课的 can-do 目标练习，默认用英语引导。
-4. 基于转写文本纠正词汇和语法，会话结束后查看练习小结；不评分发音或保存进度。
+4. 基于转写文本纠正词汇和语法，会话结束后查看练习小结；不评分发音。
 
 ### 架构
 
@@ -144,11 +162,11 @@ Yes, I’m ready. Please go slowly.
 
 ### 能力范围是什么？
 
-选择语言和初级课程中的一课：自我介绍、职场对话、点餐和结账。 围绕该课的 can-do 目标练习，默认用英语引导。 Phrasebook 展示该课的词汇、用法要点和示范对话；日语和韩语附罗马字读音。 基于转写文本纠正词汇和语法；不评分发音或保存进度。 会话结束后可查看练习小结，不保存任何内容。
+选择语言和初级课程中的一课：自我介绍、职场对话、点餐和结账。 围绕该课的 can-do 目标练习，默认用英语引导。 Phrasebook 展示该课的词汇、用法要点和示范对话；日语和韩语附罗马字读音。 基于转写文本纠正词汇和语法；不评分发音。 会话结束后可查看练习小结，并从上次中断处继续：练习记录无需账号即可保存。
 
 ### 哪些内容不会实际执行？
 
-所有业务资料均为虚构示例。结果仅用于当前对话，不写入外部系统、不通知他人，也不跨会话保存。口语教练不提供发音评分。
+所有业务资料均为虚构示例。除练习记录外，结果仅用于当前对话，不写入外部系统，也不通知他人。口语教练不提供发音评分；保存的进度是练习记录，不是成绩。
 
 ### 为什么无法启动语音会话？
 
@@ -157,6 +175,12 @@ Yes, I’m ready. Please go slowly.
 ### 可以保存对话副本吗？
 
 可以。在 Inspector 中选择 **Export session evidence**，将当前或最近一次通话下载为 JSON。请在开始新通话或刷新页面前导出。
+
+### 我的对话会被保存吗？
+
+本应用从不保存音频。只有部署方同时设置了 `COACH_PUBLIC_BASE_URL` 和 `AGORA_WEBHOOK_SECRET`，并且其 Agora 项目投递 agent history webhook 时，才会保存对话文本；**Saved progress** 会显示记录是否开启。已保存的对话（最新 20 条，最长 90 天）会在你重置进度时删除。本仓库尚未验证真实的 webhook 投递。
+
+自我介绍一课中可选填的练习用名字只随会话启动请求（`learner_name`）发送，并仅用于该次会话的指令和开场白。它不会作为字段保存到进度中。与通话中说出的其他内容一样，在对话记录开启时，它会出现在对话文本里。
 
 <a id="customize"></a>
 

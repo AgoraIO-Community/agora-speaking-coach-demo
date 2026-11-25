@@ -20,6 +20,7 @@ import {
   DEFAULT_PRACTICE_LANGUAGE,
   getLesson,
   getPracticeLanguage,
+  lessonTakesLearnerName,
   type LessonId,
   type PracticeLanguage,
 } from '@/lib/lessons';
@@ -36,6 +37,9 @@ import {
   QuickstartPreCallCard,
 } from './QuickstartPreCallCard';
 import { ConversationWorkspace } from './ConversationWorkspace';
+import { SaveStatus } from './SavedProgress';
+import { progressActions, useProgress } from '@/lib/progress/client';
+import { getContinueTarget, getLessonState } from '@/lib/progress/view';
 
 // Dynamically import the ConversationComponent with ssr disabled
 const ConversationComponent = dynamic(() => import('./ConversationComponent'), {
@@ -81,8 +85,20 @@ const SESSION_LIMIT_MS = 10 * 60 * 1000;
 
 export default function LandingPage() {
   const scenario = getScenarioPresentation();
-  const [language, setLanguage] = useState<PracticeLanguage>(DEFAULT_PRACTICE_LANGUAGE);
-  const [lessonId, setLessonId] = useState<LessonId>(DEFAULT_LESSON_ID);
+  const progress = useProgress();
+  // Until the learner chooses, follow saved progress: the last language and
+  // its next lesson that is not marked complete.
+  const [selection, setSelection] = useState<{ language: PracticeLanguage; lessonId: LessonId } | null>(null);
+  const continueTarget = getContinueTarget(progress.view);
+  const { language, lessonId } = selection ?? continueTarget
+    ?? { language: DEFAULT_PRACTICE_LANGUAGE, lessonId: DEFAULT_LESSON_ID };
+  const setLanguage = (next: PracticeLanguage) => setSelection({ language: next, lessonId });
+  const setLessonId = (next: LessonId) => setSelection({ language, lessonId: next });
+  // Optional first name or nickname for lessons that practice it. Kept in
+  // memory for this page only and sent only with the session start request.
+  const [learnerName, setLearnerName] = useState('');
+  // The session to report when it ends. Set only once an agent actually started.
+  const sessionToReport = useRef<{ id: string; language: PracticeLanguage; lessonId: LessonId; startedAt: string } | null>(null);
   const [showConversation, setShowConversation] = useState(false);
   const [activity, setActivity] = useState<AgentSignalSnapshot>({
     state: 'idle',
@@ -128,6 +144,8 @@ export default function LandingPage() {
   const handleStartConversation = async () => {
     if (isLoading || showConversation) return;
     setIsLoading(true);
+    // Freeze the selection so a progress refresh cannot change the lesson mid-session.
+    setSelection({ language, lessonId });
     setActivity({ state: 'connecting', micEnabled: false });
     setInspection({
       ...EMPTY_INSPECTION,
@@ -167,6 +185,9 @@ export default function LandingPage() {
             channel_name: responseData.channel,
             practice_language: language,
             lesson_id: lessonId,
+            ...(lessonTakesLearnerName(lessonId) && learnerName.trim()
+              ? { learner_name: learnerName.trim() }
+              : {}),
           } as ClientStartRequest),
         })
           .then(async (res) => {
@@ -197,6 +218,11 @@ export default function LandingPage() {
       ]);
 
       // 3. All dependencies ready — store state and show conversation
+      sessionToReport.current = agentData?.agent_id
+        ? { id: crypto.randomUUID(), language, lessonId, startedAt: new Date().toISOString() }
+        : null;
+      // The start was recorded server-side; pick it up without blocking the call.
+      void progressActions.refresh();
       setRtmClient(rtm);
       setAgoraData({
         ...responseData,
@@ -349,6 +375,17 @@ export default function LandingPage() {
     };
   }, [showConversation, agoraData, handleEndConversation]);
 
+  const learnerTurns = inspection.messages.filter((message) => message.role === 'user').length;
+  // Report the finished session once. The report is idempotent by session id,
+  // so a retry after a failed save cannot count it twice.
+  useEffect(() => {
+    const session = sessionToReport.current;
+    if (!ended || !session) return;
+    sessionToReport.current = null;
+    void progressActions.reportSession({ ...session, endedAt: new Date().toISOString(), learnerTurns });
+  }, [ended, learnerTurns]);
+  const lessonCompleted = getLessonState(progress.view, language, lessonId) === 'completed';
+
   return (
     <div className="demo-shell">
       <Dialog>
@@ -356,10 +393,12 @@ export default function LandingPage() {
           scenario={scenario}
           language={language}
           lessonId={lessonId}
+          learnerName={learnerName}
           onBuild={openBuild}
         />
       <ConversationWorkspace
         scenario={scenario}
+        landing={!ended && !showConversation}
         activity={
           agentJoinError
             ? { state: 'error', micEnabled: activity.micEnabled }
@@ -392,25 +431,43 @@ export default function LandingPage() {
                 </div>
                 <div>
                   <dt>Your turns</dt>
-                  <dd>{inspection.messages.filter((message) => message.role === 'user').length}</dd>
+                  <dd>{learnerTurns}</dd>
+                </div>
+                <div>
+                  <dt>Lesson status</dt>
+                  <dd>{lessonCompleted ? 'Marked complete' : 'Practiced'}</dd>
                 </div>
               </dl>
-              <LessonMaterial language={language} lessonId={lessonId} sections={['vocabulary']} />
+              <div className="demo-progress-actions">
+                <Button
+                  variant={lessonCompleted ? 'outline' : 'default'}
+                  size="sm"
+                  disabled={progress.save === 'saving'}
+                  onClick={() => void progressActions.setCompleted(language, lessonId, !lessonCompleted)}
+                >
+                  {lessonCompleted ? 'Mark as not complete' : 'Mark lesson complete'}
+                </Button>
+              </div>
+              <SaveStatus save={progress.save} error={progress.error} />
+              <LessonMaterial language={language} lessonId={lessonId} sections={['vocabulary']} learnerName={learnerName} />
               <p className="demo-note">
-                This summary lists the lesson you practiced and counts your turns in the transcript below. It does not score or grade you; your coach’s spoken recap, if you asked for one, is in the transcript. Nothing here is saved: it disappears when you reload or start another practice.
+                This summary lists the lesson you practiced and counts your turns in the transcript below. It does not score or grade you; your coach’s spoken recap, if you asked for one, is in the transcript. The lesson, date and turn count are saved to your practice history{progress.view.mode === 'coach' ? ', along with corrections your coach recorded' : ''}. {progress.view.logging
+                  ? 'The text of this conversation is also saved on the server after the session; the transcript shown here is the live copy and disappears when you reload.'
+                  : 'The conversation itself is not logged: the transcript below disappears when you reload or start another practice.'}
               </p>
             </section>
             <ConversationPanel
               id="last-session-transcript"
               name={scenario.name}
+              speakerLabels={{ agent: scenario.speakers.agent, user: scenario.speakers.learner }}
               messages={inspection.messages}
               pending={false}
               voiceState="ended"
               className="demo-conversation"
             />
             <div className="demo-ended-actions">
-              <Button variant="outline" onClick={() => { setEnded(false); setError(null); }}>Start another practice</Button>
-              <Button onClick={openBuild}>Build Now</Button>
+              {/* Clearing the selection lets saved progress choose the next lesson that is not complete. */}
+              <Button variant="outline" onClick={() => { setEnded(false); setError(null); setSelection(null); setActivity({ state: 'idle', micEnabled: false }); }}>Start another practice</Button>
             </div>
           </section>
         ) : !showConversation ? (
@@ -422,6 +479,11 @@ export default function LandingPage() {
             onLanguageChange={setLanguage}
             lessonId={lessonId}
             onLessonChange={setLessonId}
+            learnerName={learnerName}
+            onLearnerNameChange={setLearnerName}
+            progress={progress}
+            continueTarget={continueTarget}
+            onContinue={() => continueTarget && setSelection(continueTarget)}
             onStart={handleStartConversation}
           />
         ) : agoraData && rtmClient ? (
@@ -446,7 +508,6 @@ export default function LandingPage() {
                   rtmClient={rtmClient}
                   onTokenWillExpire={handleTokenWillExpire}
                   onEndConversation={handleEndConversation}
-                  onBuild={openBuild}
                   onActivityChange={setActivity}
                   onInspectionChange={setInspection}
                   ending={ending}

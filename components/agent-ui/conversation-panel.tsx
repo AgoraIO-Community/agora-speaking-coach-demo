@@ -31,44 +31,47 @@ export interface TranscriptMessage {
 export interface ConversationPanelProps {
   id: string;
   name?: string;
+  /** Speaker labels for transcript turns; the scenario supplies its own. */
+  speakerLabels?: { agent: string; user: string };
   messages: TranscriptMessage[];
   pending: boolean;
 
   voiceState?: VoiceState;
-  hidden?: boolean;
   className?: string;
   agentRun?: {
     afterMessageId: string;
     content: ReactNode;
   };
 }
-function TranscriptScrollRestoration({
-  hidden,
+// Keeps the newest text in view while the reader is following; a reader who
+// scrolled back into history is left where they are.
+function TranscriptFollow({
   messages,
   following,
 }: {
-  hidden?: boolean;
   messages: TranscriptMessage[];
   following: RefObject<boolean>;
 }) {
   const { scrollToEnd } = useMessageScroller();
 
   useLayoutEffect(() => {
-    if (!hidden && following.current) {
+    if (following.current) {
       scrollToEnd({ behavior: 'auto' });
     }
-  }, [hidden, messages, following, scrollToEnd]);
+  }, [messages, following, scrollToEnd]);
 
   return null;
 }
 
+const DEFAULT_SPEAKER_LABELS = { agent: 'Assistant', user: 'You' };
+
 export function ConversationPanel({
   id,
   name = 'Speaking Coach',
+  speakerLabels = DEFAULT_SPEAKER_LABELS,
   messages,
   pending,
   voiceState = 'ready',
-  hidden,
   className,
   agentRun,
 }: ConversationPanelProps) {
@@ -94,7 +97,6 @@ export function ConversationPanel({
   return (
     <section
       id={id}
-      hidden={hidden}
       className={cn('ag-conversation', className)}
       aria-label={`Conversation with ${name}`}
       aria-busy={pending}
@@ -102,7 +104,7 @@ export function ConversationPanel({
     >
       <div className="ag-transcript">
         <MessageScrollerProvider autoScroll defaultScrollPosition="end">
-          <TranscriptScrollRestoration hidden={hidden} messages={displayedMessages} following={following} />
+          <TranscriptFollow messages={displayedMessages} following={following} />
           <MessageScroller>
             <MessageScrollerViewport
               role="log"
@@ -142,7 +144,7 @@ export function ConversationPanel({
                       >
                         <MessageContent>
                           <MessageHeader>
-                            {message.role === 'user' ? 'You' : 'Assistant'}
+                            {message.role === 'user' ? speakerLabels.user : speakerLabels.agent}
                             {message.createdAt && (
                               <time
                                 className="ml-2 font-normal"

@@ -16,6 +16,8 @@ export interface ClientStartRequest {
   channel_name: string;
   practice_language?: import('@/lib/lessons').PracticeLanguage;
   lesson_id?: import('@/lib/lessons').LessonId;
+  /** Optional first name or nickname; used only by lessons flagged takesLearnerName. */
+  learner_name?: string;
 }
 
 export interface StopConversationRequest {
@@ -38,7 +40,6 @@ export interface ConversationComponentProps {
   rtmClient: RTMClient;
   onTokenWillExpire: (uid: string) => Promise<AgoraRenewalTokens>;
   onEndConversation: () => void | Promise<void>;
-  onBuild: import('react').MouseEventHandler<HTMLButtonElement>;
   ending?: boolean;
   sessionTimeRemaining?: number;
   startupError?: string;

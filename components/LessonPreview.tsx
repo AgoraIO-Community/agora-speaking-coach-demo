@@ -9,6 +9,7 @@ import {
   type Phrase,
   type PracticeLanguage,
 } from '@/lib/lessons';
+import { countCompleted, getLessonState, type ProgressView } from '@/lib/progress/view';
 import { Button } from './ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from './ui/dialog';
 
@@ -29,12 +30,15 @@ export function LessonMaterial({
   language,
   lessonId,
   sections = ['vocabulary', 'grammar', 'dialogue'],
+  learnerName,
 }: {
   language: PracticeLanguage;
   lessonId: LessonId;
+  /** Practice name as typed; shown in place of the sample name by lessons that take one. */
+  learnerName?: string;
   sections?: ('vocabulary' | 'grammar' | 'dialogue')[];
 }) {
-  const lesson = getLesson(language, lessonId);
+  const lesson = getLesson(language, lessonId, learnerName);
   const { romanization } = getPracticeLanguage(language);
   return (
     <div className="demo-lesson-material">
@@ -87,7 +91,7 @@ export function LessonMaterial({
   );
 }
 
-export function LessonGuide({ language, lessonId }: { language: PracticeLanguage; lessonId: LessonId }) {
+export function LessonGuide({ language, lessonId, learnerName }: { language: PracticeLanguage; lessonId: LessonId; learnerName?: string }) {
   const [open, setOpen] = useState(false);
   const lesson = getLesson(language, lessonId);
   return (
@@ -101,7 +105,7 @@ export function LessonGuide({ language, lessonId }: { language: PracticeLanguage
               {lesson.title}. Reading support for the selected lesson; you can open this during a call.
             </DialogDescription>
           </DialogHeader>
-          <LessonMaterial language={language} lessonId={lessonId} />
+          <LessonMaterial language={language} lessonId={lessonId} learnerName={learnerName} />
         </DialogContent>
       </Dialog>
     </>
@@ -114,18 +118,32 @@ export function LessonChooser({
   lessonId,
   disabled,
   onLessonChange,
+  progress,
+  learnerName,
 }: {
+  progress: ProgressView;
   language: PracticeLanguage;
   lessonId: LessonId;
+  learnerName?: string;
   disabled?: boolean;
   onLessonChange: (lessonId: LessonId) => void;
 }) {
   const { name } = getPracticeLanguage(language);
+  const curriculum = getCurriculum(language);
+  const total = curriculum.reduce((count, level) => count + level.units.reduce((sum, unit) => sum + unit.lessons.length, 0), 0);
+  const STATE_LABEL = { 'not-started': null, practiced: 'Practiced', completed: 'Completed' } as const;
   return (
     <section className="demo-lesson-chooser" aria-label={`${name} lessons`}>
       <fieldset className="demo-lesson-units" disabled={disabled}>
-        <legend>Choose your lesson</legend>
-        {getCurriculum(language).flatMap((level) =>
+        <legend>
+          Choose your lesson
+          {progress.languages[language] ? (
+            <span className="demo-lesson-progress">
+              {countCompleted(progress, language)} of {total} completed in {name}
+            </span>
+          ) : null}
+        </legend>
+        {curriculum.flatMap((level) =>
           level.units.map((unit) => (
             <div key={unit.id} className="demo-lesson-unit">
               <p>
@@ -141,6 +159,11 @@ export function LessonChooser({
                     onChange={() => onLessonChange(lesson.id)}
                   />
                   <span>{lesson.title}</span>
+                  {STATE_LABEL[getLessonState(progress, language, lesson.id)] ? (
+                    <small data-state={getLessonState(progress, language, lesson.id)}>
+                      {STATE_LABEL[getLessonState(progress, language, lesson.id)]}
+                    </small>
+                  ) : null}
                 </label>
               ))}
             </div>
@@ -153,10 +176,12 @@ export function LessonChooser({
         role="region"
         aria-label="Selected lesson material"
       >
-        <LessonMaterial language={language} lessonId={lessonId} sections={['vocabulary', 'dialogue']} />
+        <LessonMaterial language={language} lessonId={lessonId} sections={['vocabulary', 'dialogue']} learnerName={learnerName} />
       </div>
       <p className="demo-note">
-        Your coach teaches the selected lesson. Nothing is saved between sessions.
+        Your coach teaches the selected lesson. {progress.logging
+          ? 'Lessons you practice and the text of your conversations are saved to your practice history.'
+          : 'Lessons you practice are saved to your practice history; conversations are not logged.'}
       </p>
     </section>
   );

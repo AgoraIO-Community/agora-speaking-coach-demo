@@ -101,7 +101,6 @@ export default function ConversationComponent({
   rtmClient,
   onTokenWillExpire,
   onEndConversation,
-  onBuild,
   ending = false,
   sessionTimeRemaining = 600,
   startupError,
@@ -112,7 +111,6 @@ export default function ConversationComponent({
   const client = useRTCClient();
   const remoteUsers = useRemoteUsers();
   const [isEnabled, setIsEnabled] = useState(true);
-  const [conversationOpen, setConversationOpen] = useState(true);
   const [micPending, setMicPending] = useState(false);
   const [isAgentConnected, setIsAgentConnected] = useState(false);
   const [isConnectionDetailsOpen, setIsConnectionDetailsOpen] = useState(false);
@@ -716,23 +714,12 @@ export default function ConversationComponent({
         </div>
       }
       transcriptPanel={
-        <>
-          <QuickstartTranscriptPanel
-            messageList={messageList}
-            currentInProgressMessage={currentInProgressMessage}
-            agentUID={agentUID}
-            state={voiceState}
-            hidden={!conversationOpen}
-          />
-          {!conversationOpen ? (
-            <div className="demo-hidden-transcript">
-              <p>Transcript is hidden.</p>
-              <button type="button" onClick={() => setConversationOpen(true)}>
-                Show conversation
-              </button>
-            </div>
-          ) : null}
-        </>
+        <QuickstartTranscriptPanel
+          messageList={messageList}
+          currentInProgressMessage={currentInProgressMessage}
+          agentUID={agentUID}
+          state={voiceState}
+        />
       }
       audio={
         <div className="hidden">
@@ -748,12 +735,8 @@ export default function ConversationComponent({
           disabled={!localMicrophoneTrack}
           ending={ending}
           micPending={micPending}
-          conversationOpen={conversationOpen}
-          conversationId="it-transcript"
           onToggleVoice={handleMicToggle}
           onEnd={handleEndConversation}
-          onBuild={onBuild}
-          onToggleConversation={() => setConversationOpen((open) => !open)}
           devices={
             <MicrophoneSelector localMicrophoneTrack={localMicrophoneTrack} />
           }

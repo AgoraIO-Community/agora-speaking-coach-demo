@@ -7,19 +7,22 @@ export const ko = definePack({
   name: 'Korean',
   nativeName: '한국어',
   voice: 'Korean_SoothingLady',
+  recognitionLocale: 'ko-KR',
   romanization: 'Revised Romanization of Korean',
   lessons: {
     'introduce-yourself': {
+      // 입니다 is used because it is correct after any name; 예요/이에요 depends on the name's final sound.
+      sampleName: r('알렉스', 'Allekseu'),
       vocabulary: [
         r('안녕하세요.', 'Annyeonghaseyo.'),
-        r('저는 알렉스예요.', 'Jeoneun Allekseuyeyo.'),
+        r('제 이름은 {name}입니다.', 'Je ireumeun {name}imnida.'),
         r('저는 보스턴에 살아요.', 'Jeoneun Boseuteone sarayo.'),
         r('만나서 반갑습니다.', 'Mannaseo bangapseumnida.'),
         r('그쪽은요?', 'Geujjogeunyo?'),
       ],
       dialogue: [
         r('안녕하세요! 이름이 뭐예요?', 'Annyeonghaseyo! Ireumi mwoyeyo?'),
-        r('안녕하세요, 저는 알렉스예요.', 'Annyeonghaseyo, jeoneun Allekseuyeyo.'),
+        r('안녕하세요, 제 이름은 {name}입니다.', 'Annyeonghaseyo, je ireumeun {name}imnida.'),
         r('어디에 살아요?', 'Eodie sarayo?'),
         r('저는 보스턴에 살아요. 만나서 반갑습니다.', 'Jeoneun Boseuteone sarayo. Mannaseo bangapseumnida.'),
       ],
@@ -36,7 +39,7 @@ export const ko = definePack({
       },
       errors: [
         { learner: '저는 보스턴을 살아요.', alternative: '저는 보스턴에 살아요.', explanation: 'Use the particle 에 with 살아요 to say where you live.' },
-        { learner: '저는 알렉스이에요.', alternative: '저는 알렉스예요.', explanation: 'After a name ending in a vowel, use 예요.' },
+        { learner: '저 이름은 {name}입니다.', alternative: '제 이름은 {name}입니다.', explanation: 'Use 제 for my before 이름. 저 means I.' },
       ],
     },
     'talk-with-a-colleague': {

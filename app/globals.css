@@ -43,6 +43,26 @@
 .demo-session-summary dl { display: flex; flex-wrap: wrap; gap: .5rem 2rem; margin: 0; }
 .demo-session-summary dt { color: var(--muted-foreground); font-size: .75rem; line-height: 1.25rem; }
 .demo-session-summary dd { margin: 0; font-size: .9375rem; line-height: 1.5rem; }
+/* Saved progress: lesson states, continue row, learner code dialog. */
+.demo-lesson-progress { margin-left: .625rem; color: var(--muted-foreground); font-size: 12px; font-weight: 400; }
+.demo-lesson-unit label { display: flex; align-items: center; justify-content: space-between; gap: .5rem; }
+.demo-lesson-unit label small { flex: none; color: var(--muted-foreground); font-size: 11px; line-height: 16px; }
+.demo-lesson-unit label small[data-state='completed'] { color: var(--foreground); }
+.demo-lesson-unit label small[data-state='completed']::before { content: '✓ '; }
+.demo-progress-row { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem .75rem; min-height: 32px; }
+.demo-progress-actions { display: flex; flex-wrap: wrap; gap: .5rem; }
+.demo-save-status { text-align: left; }
+.demo-progress-dialog section, .demo-progress-dialog form { display: grid; gap: .5rem; justify-items: start; }
+.demo-progress-dialog h3 { font-size: .9375rem; line-height: 1.5rem; font-weight: 500; }
+.demo-learner-code { display: flex; flex-wrap: wrap; align-items: center; gap: .75rem; }
+.demo-learner-code code { padding: .375rem .625rem; border: 1px solid var(--border); border-radius: .5rem; background: var(--card); font-size: 1.125rem; letter-spacing: .08em; user-select: all; }
+.demo-code-entry { display: grid; gap: .375rem; width: 100%; max-width: 280px; font-size: .875rem; }
+/* Optional practice name, shown only for lessons that take one. */
+.demo-learner-name { display: grid; gap: .375rem; width: 100%; max-width: 320px; text-align: left; }
+.demo-learner-name label { font-size: 14px; line-height: 22px; font-weight: 500; }
+.demo-learner-name label span { color: var(--muted-foreground); font-weight: 400; }
+.demo-learner-name input { font-size: 16px; }
+.demo-learner-name input:disabled { cursor: not-allowed; opacity: .6; }
 
 :root {
   color-scheme: light;
@@ -155,9 +175,6 @@ button:disabled {
   background: transparent;
   box-shadow: none;
 }
-.demo-conversation[hidden] {
-  display: none;
-}
 .demo-conversation .ag-transcript {
   height: 100%;
   padding: 12px 0;
@@ -231,27 +248,10 @@ button:disabled {
 .demo-dock-host .ag-action-row {
   flex-shrink: 0;
 }
-.demo-dock-host .ag-dock-build {
-  border-inline-end: 1px solid var(--border);
-  padding-inline-end: 8px;
-}
 .demo-dock-host .ag-dock-end:not(:disabled):is(:hover, :focus-visible) {
   color: var(--destructive);
   border-color: var(--destructive);
   background: var(--card);
-}
-.demo-hidden-transcript {
-  display: grid;
-  align-content: center;
-  justify-items: start;
-  gap: 12px;
-  min-height: 0;
-  color: var(--muted-foreground);
-}
-.demo-hidden-transcript button {
-  color: var(--primary);
-  text-decoration: underline;
-  text-underline-offset: 4px;
 }
 .demo-session.demo-session-ended {
   height: auto;
